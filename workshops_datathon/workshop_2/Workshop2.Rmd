@@ -741,7 +741,7 @@ columns_missing
 #' @param impute_cols A list with the column names to apply data imputation.
 #' @param test_df (Optional) A Pandas DataFrame with the test set to apply data imputation using train as reference.
 #' @param groupby_cols A list with the column names to group by the data if method='median', 'mean', or 'mode' (E.g.: groupby_cols=c('race_group', 'gender')).
-#' @param method A string with the method to apply data imputation. Available options are 'median', 'mean', 'mode', 'new_category', 'new_category_numeric', and 'model'.
+#' @param method A string with the method to apply data imputation. Available options are 'median', 'mean', 'mode', 'new_category' and 'new_category_numeric'.
 #'
 #' @return A Pandas DataFrame with the data after applying data imputation on missing values of columns.
 #'
@@ -754,11 +754,11 @@ apply_data_imputation <- function(df, impute_cols, test_df=NULL, groupby_cols=NU
        
     if (method == 'median') {
       # Impute using median (for numerical values)
-      imputation_values <- aggregate(df[col], df[groupby_cols], median)
+      imputation_values <- aggregate(df[col], df[groupby_cols], median, na.rm = TRUE)
       
     } else if (method == 'mean') {
       # Impute using mean (for numerical values)
-      imputation_values <- aggregate(df[col], df[groupby_cols], mean)
+      imputation_values <- aggregate(df[col], df[groupby_cols], mean, na.rm = TRUE)
       
     } else if (method == 'mode') {
       # Impute using mode (for categorical values)
@@ -805,15 +805,25 @@ apply_data_imputation <- function(df, impute_cols, test_df=NULL, groupby_cols=NU
     if (method %in% c('median', 'mean', 'mode')) {
       imputer[[col]] <- imputation_values
       # Fill missing values with the method of the corresponding group
-      df[col][is.na(df[col])] <- apply(df[is.na(df[col]), c(col, groupby_cols)], 1, function(x) {
-        method_values <- imputation_values[as.list(x[groupby_cols])]
-        ifelse(is.na(x[col]), method_values, x[col])
-      })
-      if (!is.null(test_df)) {
-        test_df[col][is.na(test_df[col])] <- apply(test_df[is.na(test_df[col]), c(col, groupby_cols)], 1, function(x) {
-          method_values <- imputation_values[as.list(x[groupby_cols])]
-          ifelse(is.na(x[col]), method_values, x[col])
+      if (any(is.na(df[col]))) {
+        df[col][is.na(df[col])] <- apply(df[is.na(df[col]), c(col, groupby_cols)], 1, function(x) {
+          x <- as.data.frame(t(x))
+          # Merge using inner join
+          method_values <- merge(x, imputation_values, by = groupby_cols)
+          imput_val <- method_values[, ncol(method_values)]
+          ifelse(is.na(x[col]), imput_val, x[col])
         })
+      }
+      if (!is.null(test_df)) {
+        if (any(is.na(test_df[col]))) {
+          test_df[col][is.na(test_df[col])] <- apply(test_df[is.na(test_df[col]), c(col, groupby_cols)], 1, function(x) {
+          x <- as.data.frame(t(x))
+          # Merge using inner join
+          method_values <- merge(x, imputation_values, by = groupby_cols)
+          imput_val <- method_values[, ncol(method_values)]
+          ifelse(is.na(x[col]), imput_val, x[col])
+          })
+        }
       }
     }
   }
@@ -867,7 +877,7 @@ numerical_cols_missing
 You should do it after train-test split otherwise you could be introducing a data leakage in the test set
 
 ```{r}
-method = 'new_category_numeric' # 'median', 'mean', 'new_category_numeric', 'model'
+method = 'new_category_numeric' # 'median', 'mean', 'new_category_numeric'
 groupby_cols = c('race_group', 'gender') # E.g. c('race_group', 'gender')
 
 # Apply data imputation
