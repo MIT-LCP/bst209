@@ -1,0 +1,96 @@
+---
+title: "03 - Variance"
+subtitle: "ML - Trees"
+author: "Lasse Hyldig Hansen"
+date: "2023-06-06"
+output: 
+  html_document:
+    toc: true
+---
+
+## Packages
+
+```{r}
+library(ggplot2)
+library(gridExtra)
+library(rpart)
+library(rpart.plot)
+
+```
+
+
+## Increasing the depth of our tree
+
+In the previous episode we created a very simple decision tree. Let's see what happens when we introduce new decision points by increasing the depth.
+
+```{r}
+# Train model
+mdl <- rpart(y_train ~ ., data = x_train, method = "class", control = rpart.control(maxdepth = 10))
+```
+
+Now our tree is more complicated! We can see a few vertical boundaries as well as the horizontal one from before. Some of these we may like, but some appear unnatural. Let's look at the tree itself.
+
+```{r}
+# Plot tree
+rpart.plot(mdl, main = "Decision tree (depth 10)")
+```
+
+## Decision Boundary
+
+We can also visualize our decision boundary again, and see how it has changed with the tree depth:
+
+```{r}
+# Generate grid of points
+grid <- expand.grid(age = seq(min(train_df$age), max(train_df$age), length.out = 100),
+                    acutephysiologyscore = seq(min(train_df$acutephysiologyscore), max(train_df$acutephysiologyscore), length.out = 100))
+
+# Predict class label for each point in the grid
+grid$prediction <- predict(mdl, newdata = grid, type = "class")
+
+# Create decision boundary plot
+decision_boundary_plot_depth5 <- ggplot(grid, aes(x = age, y = acutephysiologyscore, fill = prediction)) +
+  geom_point() +
+  geom_tile() +
+  scale_color_manual(values = c("blue", "red")) +
+  labs(title = "Decision Boundary",
+       x = "Age",
+       y = "Acute Physiology Score",
+       fill = "Predicted Class") +
+  theme_classic()
+
+decision_boundary_plot_depth5
+```
+## Pruning
+
+Let's prune the model and look again.
+
+```{r}
+# Prune the rpart model
+pruned_mdl <- prune(mdl, cp = 0.023)
+rpart.plot(pruned_mdl, main = "Decision tree - Pruned Model (depth 10)")
+```
+Above, we can see that our second tree is smaller in depth again. We can look at the decision surface for this tree:
+
+```{r}
+# Predict class label for each point in the grid
+grid$prediction_prune <- predict(pruned_mdl, newdata = grid, type = "class")
+
+# Create decision boundary plot
+decision_boundary_plot_pruned <- ggplot(grid, aes(x = age, y = acutephysiologyscore, fill = prediction_prune)) +
+  geom_point() +
+  geom_tile() +
+  scale_color_manual(values = c("blue", "red")) +
+  labs(title = "Decision Boundary - Pruned Model",
+       x = "Age",
+       y = "Acute Physiology Score",
+       fill = "Predicted Class") +
+  theme_classic()
+
+decision_boundary_plot_pruned
+```
+
+Our pruned decision tree has a more intuitive boundary, but does make some errors. We have reduced our performance in an effort to simplify the tree. This is the classic machine learning problem of trading off complexity with error.
+
+Note that, in order to do this, we "invented" the minimum samples per leaf node of 10. Why 10? Why not 5? Why not 20? The answer is: it depends on the dataset. Heuristically choosing these parameters can be time consuming, and we will see later on how gradient boosting elegantly handles this task.
+
+

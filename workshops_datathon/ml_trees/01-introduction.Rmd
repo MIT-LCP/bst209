@@ -1,0 +1,96 @@
+---
+title: "01 - Introduction"
+subtitle: "ML - Trees"
+author: "Lasse Hyldig Hansen"
+date: "2023-06-06"
+output: 
+  html_document:
+    toc: true
+---
+
+## Predicting the outcome of critical care patients
+
+We would like to develop an algorithm that can be used to predict the outcome of patients who are admitted to intensive care units using observations available on the day of admission.
+
+Our analysis focuses on ~1000 patients admitted to critical care units in the continental United States. Data is provided by the Philips eICU Research Institute, a critical care telehealth program.
+
+We will use decision trees for this task. Decision trees are a family of intuitive "machine learning" algorithms that often perform well at prediction and classification.
+
+## Loading Packages
+
+```{r}
+library(tidyverse)
+```
+
+
+## Loading Data
+
+We will begin by loading a set of observations from our critical care dataset. The data includes variables collected on Day 1 of the stay, along with outcomes such as length of stay and in-hospital mortality.
+
+```{r}
+cohort <- read_csv("eicu_cohort_trees.csv")
+```
+The data has been assigned to a dataframe called cohort. Let's take a look at the first few lines:
+
+```{r}
+# head first 10 data entries
+head(cohort, n = 10)
+```
+
+## Preparing the data for analysis
+
+We first need to do some basic data preparation. First we encode the column "actualhospitalmortality" into numerical factor labels.
+
+```{r}
+cohort <- cohort %>% 
+          mutate(actualhospitalmortality_enc = ifelse(actualhospitalmortality == "EXPIRED", 0, 1),
+                 actualhospitalmortality_enc = as.factor(actualhospitalmortality_enc))
+```
+
+Now "ALIVE" == 1, and "EXPIRED" == 0.
+
+In the eICU Research Database, ages over 89 years are recorded as ">89" to comply with US data privacy laws. For simplicity, we will assign an age of 91.5 years to these patients (this is the approximate average age of patients over 89 in the dataset).
+
+```{r}
+# Handle the deidentified ages
+cohort <- cohort %>%
+  mutate(age = as.integer(age)) %>%
+  mutate(age = if_else(is.na(age), 91.5, age))
+```
+
+
+```{r}
+# Install and load the summarytools package
+#install.packages("summarytools")
+library(summarytools)
+
+# Generate summary characteristics
+df_summary <- descr(cohort)
+print(df_summary)
+```
+## Creating train and test sets
+
+We will only focus on two variables for our analysis, age and acute physiology score. Limiting ourselves to two variables (or "features") will make it easier to visualize our models.
+
+```{r}
+# Install and load the caret package
+#install.packages("caret")
+library(caret)
+
+# Define features and outcome
+features <- c("age", "acutephysiologyscore")
+outcome <- "actualhospitalmortality_enc"
+
+# Split the data into training and testing sets
+set.seed(42)  # Set random seed for reproducibility
+train_index <- createDataPartition(cohort[[outcome]], p = 0.7, list = FALSE)
+x_train <- cohort[train_index, features]
+y_train <- cohort[train_index, outcome]
+x_test <- cohort[-train_index, features]
+y_test <- cohort[-train_index, outcome]
+
+# binding the dataframes with cbind so that they fit into the functions later
+train_df = cbind(x_train, y_train)
+test_df = cbind(x_test, y_test)
+```
+

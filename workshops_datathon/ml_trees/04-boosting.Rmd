@@ -1,0 +1,106 @@
+---
+title: "04 - Boosting"
+subtitle: "ML - Trees"
+author: "Lasse Hyldig Hansen"
+date: "2023-06-06"
+output: 
+  html_document:
+    toc: true
+---
+
+## Required Packages
+
+Remember you can install packages with the function:
+
+install.packages("package name")
+
+```{r}
+# Required Libraries
+library(adabag)
+library(rpart)
+library(rattle)
+library(rpart.plot)
+library(ggplot2)
+```
+
+
+## Boosting
+
+In the previous episode, we demonstrated that decision trees may have high "variance". Their performance can vary widely given different samples of data. An algorithm that performs somewhat poorly at a task - such as simple decision tree - is sometimes referred to as a "weak learner".
+
+The premise of boosting is the combination of many weak learners to form a single "strong" learner. In a nutshell, boosting involves building a models iteratively. At each step we focus on the data on which we performed poorly.
+
+In our context, the first step is to build a tree using the data. Next, we look at the data that we misclassified, and re-weight the data so that we really wanted to classify those observations correctly, at a cost of maybe getting some of the other data wrong this time. Let's see how this works in practice.
+
+```{r}
+# build models with a single split
+tree_control <- rpart.control(maxdepth = 1) # adjust cp as needed
+mdl <- boosting(formula = actualhospitalmortality_enc ~ age + acutephysiologyscore, 
+                data = train_df, 
+                boos = TRUE, 
+                mfinal = 6,
+                trees = tree_control)
+
+# Plot each individual decision tree
+par(mfrow = c(2,3))
+for (i in 1:6) {
+  rpart.plot(mdl$trees[[i]], main = paste("Tree", i), 
+             under = TRUE, faclen = 0, cex = 0.8)
+}
+```
+
+```{r}
+# Required Libraries
+library(xgboost)
+
+# Convert your training data into a matrix format required by xgboost
+x_train_matrix <- as.matrix(train_df[,c("age", "acutephysiologyscore")])
+y_train_matrix <- as.numeric(as.character(train_df$actualhospitalmortality_enc))
+
+# Convert to xgb.DMatrix
+dtrain <- xgb.DMatrix(data = x_train_matrix, label = y_train_matrix)
+
+# Specify parameters
+params <- list(max_depth = 5,    # maximum depth of the trees
+               eta = 1,          # learning rate
+               nthread = 2)      # number of threads to be used
+
+# Number of boosting rounds
+nrounds = 6
+
+# Fit model
+mdl <- xgboost(data = dtrain, params = params, nrounds = nrounds)
+
+
+```
+
+```{r}
+library(xgboost)
+library(ggplot2)
+
+# Generate grid of points
+grid <- expand.grid(age = seq(min(train_df$age), max(train_df$age), length.out = 100),
+                    acutephysiologyscore = seq(min(train_df$acutephysiologyscore), max(train_df$acutephysiologyscore), length.out = 100))
+
+# Predict class label for each point in the grid
+grid$prediction <- predict(mdl, as.matrix(grid))
+
+# Convert prediction to factor for plotting
+grid$prediction <- as.factor(ifelse(grid$prediction > 0.5, 1, 0))
+
+# Create plot
+ggplot(grid, aes(x = age, y = acutephysiologyscore, fill = prediction)) +
+  geom_point() +
+  geom_tile() +
+  #scale_fill_manual(values = c("blue", "red")) +
+  scale_color_manual(values = c("blue", "red")) +
+  labs(title = "Decision Boundary",
+       x = "Age",
+       y = "Acute physiology score",
+       fill = "Predicted Class") +
+  theme_classic()
+```
+
+
+
+
