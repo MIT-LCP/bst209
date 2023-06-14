@@ -26,10 +26,10 @@ library(rpart)
 library(rpart.plot)
 
 # Convert y_train to factor
-y_train <- as.factor(y_train$actualhospitalmortality_enc)
+train_df$actualhospitalmortality_enc <- as.factor(train_df$actualhospitalmortality_enc)
 
 # Create and fit the decision tree model
-mdl <- rpart(y_train ~ age + acutephysiologyscore, data = x_train, method = "class", control = rpart.control(maxdepth = 1))
+mdl <- rpart(actualhospitalmortality_enc ~ age + acutephysiologyscore, data = train_df, method = "class", control = rpart.control(maxdepth = 1))
 
 # Visualize the decision tree using rpart.plot
 rpart.plot(mdl)
@@ -68,6 +68,7 @@ decision_boundary_plot <- ggplot(grid, aes(x = age, y = acutephysiologyscore, fi
 
 decision_boundary_plot
 ```
+
 In this plot we can see the decision boundary on the y-axis, separating the predicted classes. The true classes are indicated at each point. Where the background and point colours are mismatched, there has been misclassification. Of course we are using a very simple model.
 
 
