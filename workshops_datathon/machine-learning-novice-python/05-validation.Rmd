@@ -93,8 +93,8 @@ print(paste("Accuracy on test set:", acc_test))
 ```
 
 ```
-Accuracy on training set: 0.86
-Accuracy on test set: 0.82
+Accuracy on training set: 0.84
+Accuracy on test set: 0.91
 ```
 {: .output}
 
@@ -169,7 +169,7 @@ print(paste("Average accuracy:", percent(mean_accuracy)))
 ```
 
 ```
-Cross-validation accuracy, mean (std): 81.53 (3.31)
+Cross-validation accuracy, mean (std): 83%
 ```
 {: .output}
 
