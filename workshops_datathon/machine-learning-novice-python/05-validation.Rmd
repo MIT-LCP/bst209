@@ -31,6 +31,8 @@ What is the accuracy of our model at predicting in-hospital mortality?
 ```{r}
 library(tidyverse)
 library(caret)
+library(mlr)
+library(scales)
 
 # load the data
 cohort <- read_csv("./eicu_cohort.csv")
@@ -55,8 +57,11 @@ cohort$gender <- as.integer(cohort$gender)
 X <- cohort[, "apachescore", drop = FALSE]
 y <- cohort$actualhospitalmortality_enc
 
-# split the data into training and testing sets
-set.seed(123) # for reproducibility
+# create a data frame with the feature and response variable
+data <- data.frame(X = X, y = y)
+
+# set the seed for reproducibility
+set.seed(123)
 train_indices <- createDataPartition(y, p = 0.8, list = FALSE)
 X_train <- X[train_indices, ]
 y_train <- y[train_indices]
@@ -131,30 +136,36 @@ With K-fold cross validation, we select our model to evaluate and then:
 
 When creating our training and test sets, we needed to be careful to avoid data leaks. The same applies when creating training and validation sets. We can use a `pipeline` object to help manage this issue.
 
-```python
-from numpy import mean, std
-from sklearn.model_selection import cross_val_score, RepeatedStratifiedKFold
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.pipeline import Pipeline
+```{r}
+# perform K-fold cross-validation
+k <- 5  # number of folds
+accuracy <- rep(NA, k)
 
-# define dataset
-X = x_train
-y = y_train
+for (i in 1:k) {
+  # partition the data into training and validation sets
+  folds <- createFolds(y, k = k, list = TRUE)
+  train_indices <- unlist(folds[-i])
+  val_indices <- folds[[i]]
+  
+  train_data <- data[train_indices, ]
+  val_data <- data[val_indices, ]
+  
+  # fit the model to the training data
+  reg <- glm(y ~ ., data = train_data, family = binomial())
+  
+  # make predictions on the validation set
+  y_val_pred <- predict(reg, newdata = val_data, type = "response")
+  
+  # calculate accuracy on the validation set
+  acc_val <- mean(ifelse(y_val_pred >= 0.5, 1, 0) == val_data$y)
+  accuracy[i] <- acc_val
+}
 
-# define the pipeline
-steps = list()
-steps.append(('scaler', MinMaxScaler()))
-steps.append(('model', LogisticRegression()))
-pipeline = Pipeline(steps=steps)
+# calculate average accuracy across folds
+mean_accuracy <- mean(accuracy)
 
-# define the evaluation procedure
-cv = RepeatedStratifiedKFold(n_splits=5, n_repeats=3, random_state=1)
-
-# evaluate the model using cross-validation
-scores = cross_val_score(pipeline, X, y, scoring='accuracy', cv=cv, n_jobs=-1)
-
-# report performance
-print('Cross-validation accuracy, mean (std): %.2f (%.2f)' % (mean(scores)*100, std(scores)*100))
+# print the average accuracy
+print(paste("Average accuracy:", percent(mean_accuracy)))
 ```
 
 ```
