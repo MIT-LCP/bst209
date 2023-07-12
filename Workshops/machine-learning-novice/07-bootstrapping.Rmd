@@ -1,0 +1,147 @@
+---
+title: "Bootstrapping"
+teaching: 20
+exercises: 10
+questions:
+- "Why do we 'boot up' computers?"
+- "How is bootstrapping commonly used in machine learning?"
+objectives:
+- "Use bootstrapping to compute confidence intervals."
+keypoints:
+- "Bootstrapping is a resampling technique, sometimes confused with cross-validation."
+- "Bootstrapping allows us to generate a distribution of estimates, rather than a single point estimate."
+- "Bootstrapping allows us to estimate uncertainty, allowing computation of confidence intervals."
+---
+
+## Bootstrapping
+
+In statistics and machine learning, bootstrapping is a resampling technique that involves repeatedly drawing samples from our source data with replacement, often to estimate a population parameter. By “with replacement”, we mean that the same data point may be included in our resampled dataset multiple times.
+
+The term originates from the impossible idea of lifting ourselves up without external help, by pulling on our own bootstraps. Side note, but apparently it’s also why we “boot” up a computer (to run software, software must first be run, so we bootstrap).
+
+Typically our source data is only a small sample of the ground truth. Bootstrapping is loosely based on the law of large numbers, which says that with enough data the empirical distribution will be a good approximation of the true distribution.
+
+Using bootstrapping, we can generate a distribution of estimates, rather than a single point estimate. The distribution gives us information about certainty, or the lack of it.
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(caret)
+
+# Convert outcome to a categorical type
+categories <- c('ALIVE', 'EXPIRED')
+cohort$actualhospitalmortality <- factor(cohort$actualhospitalmortality, levels = categories)
+
+# Add the encoded value to a new column
+cohort$actualhospitalmortality_enc <- as.integer(cohort$actualhospitalmortality)
+head(cohort[c('actualhospitalmortality_enc', 'actualhospitalmortality')])
+
+# Define features and outcome
+features <- c('apachescore')
+outcome <- c('actualhospitalmortality_enc')
+
+# Partition data into training and test sets
+set.seed(42)
+data_split <- createDataPartition(y = cohort$outcome, p = 0.7, list = FALSE)
+x_train <- cohort[features, ][data_split, ]
+y_train <- cohort[outcome][data_split]
+x_test <- cohort[features, ][-data_split, ]
+y_test <- cohort[outcome][-data_split]
+
+# Restructure data for input into model
+# Note: Remove the reshape if fitting to >1 input variable
+x_train <- matrix(x_train, ncol = 1)
+y_train <- as.vector(y_train)
+x_test <- matrix(x_test, ncol = 1)
+y_test <- as.vector(y_test)
+
+# Train model
+reg <- glm(as.factor(y_train) ~ x_train, family = binomial())
+summary(reg)
+
+# Bootstrap predictions
+accuracy <- vector()
+n_iterations <- 1000
+for (i in 1:n_iterations) {
+  index <- sample(1:length(y_train), replace = TRUE)
+  X_bs <- x_train[index, ]
+  y_bs <- y_train[index]
+  # Make predictions
+  y_hat <- predict(reg, newdata = data.frame(x_train = X_bs), type = "response")
+  y_hat <- ifelse(y_hat >= 0.5, 1, 0)
+  # Evaluate model
+  score <- sum(y_bs == y_hat) / length(y_bs)
+  accuracy <- c(accuracy, score)
+}
+```
+
+Let’s plot a distribution of accuracy values computed on the bootstrap samples.
+
+```{r}
+library(ggplot2)
+library(scales)
+
+# Plot distribution of accuracy
+ggplot(data = data.frame(accuracy = accuracy), aes(x = accuracy)) +
+  geom_density() +
+  labs(title = "Accuracy across 1000 bootstrap samples of the held-out test set",
+       x = "Accuracy") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_x_continuous(labels = percent_format()) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+<!-- insert figure here -->
+
+We can now take the mean accuracy across the bootstrap samples, and compute confidence intervals. There are several different approaches to computing the confidence interval. We will use the percentile method, a simpler approach that does not require our sampling distribution to be normally distributed.
+
+## Percentile Method
+
+For a 95% confidence interval we can find the middle 95% bootstrap statistics. This is known as the percentile method. This is the preferred method because it works regardless of the shape of the sampling distribution.
+
+Regardless of the shape of the bootstrap sampling distribution, we can use the percentile method to construct a confidence interval. Using this method, the 95% confidence interval is the range of points that cover the middle 95% of bootstrap sampling distribution.
+
+We determine the mean of each sample, call it X̄ , and create the sampling distribution of the mean. We then take the α/2 and 1 - α/2 percentiles (e.g. the .0251000 and .9751000 = 25th and 975th bootstrapped statistic), and these are the confidence limits.
+
+```{r}
+# get median
+median <- quantile(accuracy, 0.5)
+
+# get 95% interval
+alpha <- 100 - 95
+lower_ci <- quantile(accuracy, alpha/200)
+upper_ci <- quantile(accuracy, 1 - alpha/200)
+
+cat(paste("Model accuracy is reported on the test set. 1000 bootstrapped samples ",
+          "were used to calculate 95% confidence intervals.\n",
+          "Median accuracy is", format(median, digits = 2), "with a 95% confidence ",
+          "interval of [", format(lower_ci, digits = 2), ",",
+          format(upper_ci, digits = 2), "].", sep = ""))
+
+```
+
+<!-- insert output box here -->
+
+```{r}
+library(ggplot2)
+
+# Create a kernel density plot
+ggplot(data = data.frame(accuracy), aes(x = accuracy)) +
+  geom_density() +
+  ggtitle("Accuracy across 1000 bootstrap samples of the held-out test set\nshowing median with 95% confidence intervals") +
+  xlab("Accuracy") +
+  geom_vline(xintercept = median, linetype = "dashed", color = "red") +
+  geom_vline(xintercept = lower_ci, linetype = "dashed", color = "red") +
+  geom_vline(xintercept = upper_ci, linetype = "dashed", color = "red")
+
+```
+
+<!-- insert figure here -->
+
+Once an interval is calculated, it may or may not contain the true value of the unknown parameter. A 95% confidence level does *not* mean that there is a 95% probability that the population parameter lies within the interval.
+
+The confidence interval tells us about the reliability of the estimation procedure. 95% of confidence intervals computed at the 95% confidence level contain the true value of the parameter.
+
+{% include links.md %}
