@@ -155,7 +155,7 @@ Typically we will want to split our data into a training set and "held-out" test
 
 ![Train and test set](../fig/train_test.png){: width="600px"}
 
-To ensure reproducibility, we should set the random state of the splitting method. This means that Python's random number generator will produce the same "random" split in future.
+To ensure reproducibility, we should set the random state of the splitting method. This means that the same "random" split  will be produced in the future.
 
 ```{r}
 library(caret)
