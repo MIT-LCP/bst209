@@ -115,11 +115,11 @@ We need to find the parameters for the best-fitting logistic model given our dat
 
 ## Training (or fitting) the model
 
-As is typically the case when using machine learning packages, we don't need to code the loss function ourselves. The function is implemented as part of our machine learning package (in this case [scikit-learn](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html)). Let's try fitting a Logistic Regression to our data.
+As is typically the case when using machine learning packages, we don't need to code the loss function ourselves. The function is implemented as part of the machine learning packages. Let's try fitting a Logistic Regression to our data.
 
 
 > ## Exercise
-> A) Following the previous example for a linear regression, fit a logistic regression to your data and create a new plot. How do the predictions differ from before? Hint: `from sklearn.linear_model import LogisticRegression`.
+> A) Following the previous example for a linear regression, fit a logistic regression to your data and create a new plot. How do the predictions differ from before?
 > 
 > > ## Solution
 > > A) You should see a plot similar to the one below: ![Logistic regression](../fig/section5-fig3.png){: width="600px"}
