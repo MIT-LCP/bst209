@@ -93,8 +93,8 @@ print(paste("Accuracy on test set:", acc_test))
 ```
 
 ```
-Accuracy on training set: 0.84
-Accuracy on test set: 0.91
+Accuracy on training set: 0.92
+Accuracy on test set: 0.93
 ```
 {: .output}
 
