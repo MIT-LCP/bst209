@@ -35,7 +35,7 @@ library(mlr)
 library(scales)
 
 # load the data
-cohort <- read_csv("./eicu_cohort.csv")
+cohort <- read_csv("../Data/eicu_cohort.csv")
 
 # rename columns
 names(cohort)[names(cohort) == "unabridgedhosplos"] <- "length of stay"
