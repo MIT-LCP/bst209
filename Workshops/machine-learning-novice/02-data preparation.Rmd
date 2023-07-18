@@ -32,7 +32,7 @@ Let's begin by loading this data:
 library(tidyverse)
 
 #load the data
-cohort <- read_csv("./eicu_cohort.csv")
+cohort <- read_csv("../Data/eicu_cohort.csv")
 head(cohort)
 ```
 
@@ -68,9 +68,9 @@ Let's generate a similar table for ourselves:
 library(tableone)
 
 # rename columns
-names(cohort)[names(cohort) == "unabridgedhosplos"] <- "length of stay"
-names(cohort)[names(cohort) == "meanbp"] <- "mean blood pressure"
-names(cohort)[names(cohort) == "wbc"] <- "white cell count"
+names(cohort)[names(cohort) == "unabridgedhosplos"] <- "length_of_stay"
+names(cohort)[names(cohort) == "meanbp"] <- "mean_blood_pressure"
+names(cohort)[names(cohort) == "wbc"] <- "white_cell_count"
 
 #view summary characteristics
 t1 <- CreateTableOne(vars = names(cohort), data = cohort, factorVars = "actualhospitalmortality")
