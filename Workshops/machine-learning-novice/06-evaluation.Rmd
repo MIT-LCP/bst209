@@ -73,12 +73,12 @@ model <- glm(actualhospitalmortality ~ apachescore , data = train, family = "bin
 
 # generate predictions
 y_hat_test_proba <- predict(model, newdata = test, type = "response")
-  # convert probabilities to binary class labels
+
+# convert probabilities to binary class labels
 y_hat_test_class <- ifelse(y_hat_test_proba >= 0.5, 1, 0)
 ```
 
 Each prediction is assigned a probability of a positive class. For example, the first 22 probabilities are:
-
 
 ```{r}
 probs <- y_hat_test_proba[1:22]
@@ -104,21 +104,21 @@ print ( y_test_class[1:22])
 
 # Confusion matrices
 
-It is common practice to arrange these outcome categories into a “confusion matrix”, which is a grid that records our predictions against the ground truth. For a binary outcome, confusion matrices are organised as follows:
+It is common practice to arrange these outcome categories into a “confusion matrix”, which is a grid that records our predictions against the ground truth. For a binary outcome, confusion matrices are organized as follows:
 
 ||Negative (predicted)|Positive (predicted)|
 |---------|--------|-------|
-|Negative (actual)|  TN      |   FP    |
-|Positive (actual)|   FN     |  TP     |
+|Negative (actual)|  TN     |  FP    |
+|Positive (actual)|  FN     |  TP    |
 
-The sum of the cells is the total number of predictions. The diagonal from top left to bottom right indicates correct predictions. Let’s visualize the results of the model in the form of a confusion matrix:
+The sum of the cells is the total number of predictions. The diagonal from the top left to the bottom right indicates correct predictions. Let’s visualize the results of the model in the form of a confusion matrix:
 
 ```{r}
 # converting y_hat_class and y_test_class in factors
 y_hat_test_class <- factor(y_hat_test_class)
 y_test_class <- factor(y_test_class)
 
-# calculating the confusion matrix
+# Calculating the confusion matrix
 confusion <- confusionMatrix(y_hat_test_class, y_test_class)
 
 # getting the class names
@@ -134,8 +134,15 @@ heatmap <- ggplot(data = as.data.frame(cm), aes(x = Predicted, y = Actual, fill 
   theme_minimal()
 ```
 
+Then we can print the confusion matrix:
+
 ```{r}
 print(cm)
+```
+
+And the heatmap:
+
+```{r}
 print(heatmap)
 ```
 
