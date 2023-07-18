@@ -98,7 +98,7 @@ Accuracy on test set: 0.93
 ```
 {: .output}
 
-Not bad! There was a slight drop in performance on our test set, but that is to be expected.
+Not bad!
 
 ## Validation set
 
