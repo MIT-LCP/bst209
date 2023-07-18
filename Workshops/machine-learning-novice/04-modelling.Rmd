@@ -36,7 +36,7 @@ library(dplyr)
 library(ggplot2)
 
 # Load the data
-cohort <- read.csv("./eicu_cohort.csv")
+cohort <- read.csv("../Data/eicu_cohort.csv")
 
 # Rename columns
 names(cohort) <- sub("unabridgedhosplos", "length of stay", names(cohort))
