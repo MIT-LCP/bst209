@@ -19,14 +19,11 @@ output: html_document
 - "Use the confusion matrix to compute popular performance metrics."
 - "Plot an AUROC curve."
 
-
-
-
-
 ## Evaluating a classification task
 
 We trained a machine learning model to predict the outcome of patients admitted to intensive care units. As there are two outcomes, we refer to this as a “binary” classification task. We are now ready to evaluate the model on our held-out test set.
 
+First we will load the packages needed:
 
 ```{r, message=FALSE, warning=FALSE}
 library(dplyr)
@@ -37,9 +34,12 @@ library(pheatmap)
 library(ggplot2)
 library(ROCR)
 ```
+
+Then we will load the data, and partition it:
+
 ```{r}
 # loading the dataframe into 'cohort'
-cohort <- read.csv("C:/Users/kahin/Desktop/TPE ISSD/testheinrich/eicu_cohort.csv")
+cohort <- read.csv("../Data/eicu_cohort.csv")
 
 # convert outcome to a categorical type
 categories <- c("ALIVE", "EXPIRED")
@@ -76,8 +76,6 @@ y_hat_test_proba <- predict(model, newdata = test, type = "response")
   # convert probabilities to binary class labels
 y_hat_test_class <- ifelse(y_hat_test_proba >= 0.5, 1, 0)
 ```
-
-
 
 Each prediction is assigned a probability of a positive class. For example, the first 22 probabilities are:
 
