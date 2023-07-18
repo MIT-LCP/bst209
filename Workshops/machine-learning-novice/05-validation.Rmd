@@ -163,13 +163,14 @@ for (i in 1:k) {
 
 # calculate average accuracy across folds
 mean_accuracy <- mean(accuracy)
+std_accuracy <- sd(accuracy)
 
 # print the average accuracy
 print(paste("Average accuracy:", percent(mean_accuracy)))
 ```
 
 ```
-Cross-validation accuracy, mean (std): 83%
+Cross-validation accuracy, mean (sd: 0.024): 92%
 ```
 {: .output}
 
