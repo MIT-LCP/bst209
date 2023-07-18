@@ -153,21 +153,24 @@ Accuracy is the overall proportion of correct predictions. Think of a dartboard.
 
 Accuracy can be written as:
 
-###                   $Accuracy=\frac{TP + TN}{TP+TN+FP+FN}$
+$Accuracy=\frac{TP + TN}{TP+TN+FP+FN}$
+
 What was the accuracy of our model?
 
 ```{r}
 accuracy <- sum(y_hat_test_class == y_test_class) / length(y_test_class)
 print(paste("Accuracy (model) =", round(accuracy, 2)))
 ```
+
 Not bad at first glance. When comparing our performance to guessing “0” for every patient, however, it seems slightly less impressive!
+
 ```{r}
 zeros <- rep(0, length(y_test_class))
 acc <- sum(y_hat_test_class == zeros) / length(y_test_class)
 print(paste("Accuracy (zeros) =", round(acc, 2)))
-
 ```
-The problem with accuracy as a metric is that it is heavily influenced by prevalence of the positive outcome: because the proportion of 1s is relatively low, classifying everything as 0 is a safe bet.
+
+The problem with accuracy as a metric is that it is heavily influenced by the prevalence of the positive outcome: because the proportion of 1s is relatively low, classifying everything as 0 is a safe bet.
 
 We can see that the high accuracy is possible despite totally missing our target. To evaluate an algorithm in a way that prevalence does not cloud our assessment, we often look at sensitivity and specificity.
 
@@ -175,21 +178,44 @@ We can see that the high accuracy is possible despite totally missing our target
 
 Sensitivity is the ability of an algorithm to predict a positive outcome when the actual outcome is positive. In our case, of the patients who die, what proportion did we correctly predict? This can be written as:
 
-###                   $Sensitivity=Recall=\frac{TP}{TP+FN}$
-Because a model that calls “1” for everything has perfect sensitivity, this measure is not enough on its own. Alongside sensitivity we often report on specificity.
+$Sensitivity=Recall=\frac{TP}{TP+FN}$
+
+Because a model that calls “1” for everything has perfect sensitivity, this measure is not enough on its own. Alongside sensitivity, we often report on specificity.
 
 # Specificity (A.K.A “True Negative Rate”)
 Specificity relates to the test’s ability to correctly classify patients who survive their stay (i.e. class “0”). Specificity is the proportion of those who survive who are predicted to survive. The formula for specificity is:
 
-###                   $Specificity=\frac{TN}{FP+TN}$
+$Specificity=\frac{TN}{FP+TN}$
 
 # Receiver-Operator Characteristic
 
 A Receiver-Operator Characteristic (ROC) curve plots 1 - specificity vs. sensitivity at varying probability thresholds. The area under this curve is known as the AUROC (or sometimes just the “Area Under the Curve”, AUC) and it is a well-used measure of discrimination that was originally developed by radar operators in the 1940s.
+
 ```{r}
-pred <-prediction(y_hat_test_proba,y_test_class)
-perf <-performance(pred,"tpr","fpr") 
-plot(perf, colorsize=TRUE)
+# Load the required libraries
+library(ggplot2)
+library(ROCR)
+
+# Create the prediction object
+pred <- prediction(y_hat_test_proba, y_test_class)
+
+# Calculate the true positive rate (sensitivity) and false positive rate
+perf <- performance(pred, "tpr", "fpr")
+
+# Extract the data for plotting
+roc_data <- data.frame(
+  FPR = unlist(perf@x.values),
+  TPR = unlist(perf@y.values)
+)
+
+# Plot the ROC curve using ggplot2
+ggplot(roc_data, aes(x = FPR, y = TPR)) +
+  geom_path(color = "blue") +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray") +
+  labs(title = "Receiver Operating Characteristic (ROC) Curve",
+       x = "False Positive Rate (1 - Specificity)",
+       y = "True Positive Rate (Sensitivity)") +
+  theme_minimal()
 ```
 
 An AUROC of 0.5 is no better than guessing and an AUROC of 1.0 is perfect. An AUROC of 0.9 tells us that the 90% of times our model will assign a higher risk to a randomly selected patient with an event than to a randomly selected patient without an event
