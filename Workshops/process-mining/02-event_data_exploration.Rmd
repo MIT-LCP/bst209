@@ -1,0 +1,158 @@
+---
+title: "02 - Event Data Exploration"
+subtitle: "Process Mining"
+author: "Jan Niklas Adams"
+date: "2023-07-12"
+questions:
+- "How to load event data in R?"
+- "What specialized ways of exploratory data analysis are available for event data?"
+- "What are examples of phenomena that can be observed in such an exploratory analysis?"
+objectives:
+- "Develop the capacity to load and process event data in R."
+- "Familiarize with new techniques to perform exploratory data analysis for event data."
+- "Learn typical patterns that can be observed through such exploratory analysis."
+keypoints:
+- "CSV-files can be loaded into R and be interpreted as event logs, provided the semantical information."
+- "Dotted charts and process metrics provide intuitive insights into the data."
+- "Process dynamics and differences between patient groups cna be observed through the new means of exploratory data analysis."
+output: 
+  html_document:
+    toc: true
+---
+
+## Event Log Handling
+
+Event logs often come in the form of a CSV-file or the standardized IEEE event log format called XES. We will load a CSV file and map the different columns to the case, activity, and timestamp concept. Afterward, we show some basic operations to manipulate the event log and how to visualize it.
+
+### Event Log Import
+
+```{r}
+log <- read.csv("sepsis_event_log.csv")
+log
+```
+
+We need to convert the CSV-file we have imported as a data.frame into an event log format that can be processed by the library.
+
+```{r}
+# we need to load the BupaR library for process mining
+library(bupaverse)
+log <- log %>%
+  # first, we need to rename columns such that the library understands which information is contained in them
+  dplyr::rename(start = startTime, 
+           complete = completeTime) %>%
+  # we need to convert the timestamp columns to actual timestamps
+  convert_timestamps(columns = c("start", "complete"), format = ymd_hms) %>%
+  
+  #we tell the library how to interpret the other columns as cases, activities, timestamps, and resources. The specific type of event log is called "activity log" for this library
+  activitylog(case_id = "patient",
+                activity_id = "treatment",
+                timestamps = c("start","complete"),
+                resource_id = "org.group") %>%
+  act_unite(Release = c("Release A","Release B","Release C", "Release D", "Release E")) %>%
+  filter_activity(c("ER Sepsis Triage","ER Triage"), reverse =T)
+log      
+```
+
+We can take a look at the event log, e.g., the number of patients, the number of events per patient, etc.
+
+```{r}
+log %>%
+    cases()
+```
+
+### Basic Event Log Manipulation
+
+As with any other data, we would like to manipulate event logs with basic operations to scope our data analysis.
+
+We can filter the cases based on their attributes, e.g., end-to-end treatment time or activity presence.
+
+For example, based on the event log we know, that there is the age of the patient recorded at every event. We can filter our the events where patients where below 60.
+
+```{r}
+log %>%
+  filter(Age < 60) %>%
+  cases()
+```
+
+We could also single our patients that have been in the hospital for very long by filtering for long throughput times, i.e., end-to-end stays in the hospital.
+
+```{r}
+log %>%
+    filter_throughput_time(interval = c(20,NA), units = "days") %>%
+    cases()
+```
+
+Sometimes only patients that received certain treatments could be of interest.
+
+```{r}
+log %>%
+    filter_activity_presence(c("Leucocytes", "CRP"), method = "all")  %>%
+    cases()
+```
+
+## Event Log Exploration
+
+To get an overview of the whole event log, we can summarize all treatments undertaken for all patients in one graph. By drawing each event as a colored dot according to the undertaken treatment, placing it according to time on the x-axis and according to patient on the y-axis, we can investigate dynamics of the overall process.
+
+```{r}
+log %>%
+  dotted_chart(x = "absolute")
+```
+
+we can observe the whole timeframe of the data, which timeframes have many newly-arriving patients, and we spot outlier cases with many treatments. What can you observe?
+
+-   In February and March 2014, there is a stronger increase in patients compared to the timeframe before.
+
+-   There are a few patients that receive many treatments, especially CRPs.
+
+-   The return ER is often lagging far behind the last treatment before.
+
+See this dotted chart taken from [Benevento et al.](https://arxiv.org/pdf/2209.10897.pdf)
+
+![](./dotted_chart.png)
+
+> ### Exercise
+>
+> Analyze the dotted chart and discuss which disease this treatment process could describe.
+>
+> > ### Solution
+> >
+> > The dotted chart shows the treatment of COVID-19 patients in the RWTH Aachen Uniklinikum in Germany. Note the clearly visible waves of patients coming into the hospital.
+> >
+> > {: .solution} {: .challenge}
+
+### Descriptive Statistics
+
+Some other statistics might provide us with good starting points for our analysis and understanding of the data. First, we investigate which treatments are present for which share of patients.
+
+```{r}
+log %>%
+  activity_presence() %>%
+    plot
+```
+
+We can see that different treatment actions have different prevalences among the patients. We will later investigate which treatment actions co-occur together and after each other. For now, we also would like to get an overview of the timely nature of the event log. We can investigate, how long patients are being treated. The end-to-end time in the treatment process is called the throughput time. We call plot the distribution of throughput times among patients.
+
+```{r}
+log %>%
+  throughput_time("case") %>%
+  plot
+```
+
+If we would like to investigate how different patient groups differ with respect to their treatment process, we can group the patients and apply the exploratory data analysis for each group. Through visual analysis, potential differences can be spotted that can be tested for significance in later stages of analysis. We group the patients by age and investigate their throughput times.
+
+```{r}
+log %>%
+  group_by(Age) %>%
+  throughput_time() %>%
+  plot()
+```
+
+*Exercise: Compare the most frequent activities for patients where an infection is suspected or not.*
+
+```{r}
+log %>%
+  group_by(InfectionSuspected) %>%
+  activity_presence() %>%
+  plot()
+```

@@ -1,0 +1,117 @@
+---
+title: "03 - Variant Analysis and Discovery"
+subtitle: "Process Mining"
+author: "Jan Niklas Adams"
+date: "2023-07-12"
+questions:
+- "How can we get an overview of possible paths through the (treatment) process?"
+- "How do we interpret variant explorers for our analysis?"
+- "How can we utilize a discovered process model/map to investigate treatment processes?"
+- "How can we utilize these tools to conduct a comparative analysis of treatment processes between patient groups?"
+objectives:
+- "Get an overview of tools to analyze treatment paths in a process."
+- "Develop an understanding of variants and process maps."
+- "Learn how to employ these tools for comparative process analysis."
+keypoints:
+- "Variant analysis provides a tool to observe possible treatment paths and their frequency."
+- "Process models/maps can yield a comprehensive picture of all possible treatments paths of a process."
+- "Differences in treatments paths between groups can be used as important first hints to investigate bias."
+output: 
+  html_document:
+    toc: true
+---
+
+First, we load the event log.
+
+```{r}
+library(bupaverse)
+log <- read.csv("sepsis_event_log.csv")
+log <- log %>%
+  # first, we need to rename columns such that the library understands which information is contained in them
+  dplyr::rename(start = startTime, 
+           complete = completeTime) %>%
+  # we need to convert the timestamp columns to actual timestamps
+  convert_timestamps(columns = c("start", "complete"), format = ymd_hms) %>%
+  
+  #we tell the library how to interpret the other columns as cases, activities, timestamps, and resources. The specific type of event log is called "activity log" for this library
+  activitylog(case_id = "patient",
+                activity_id = "treatment",
+                timestamps = c("start","complete"),
+                resource_id = "org.group") %>%
+  act_unite(Release = c("Release A","Release B","Release C", "Release D", "Release E")) %>%
+  filter_activity(c("ER Sepsis Triage","ER Triage"), reverse =T)
+  #act_unite(Admission = c("ER Triage","ER Registration","ER Sepsis Triage"))
+  
+```
+
+## Variant Analysis
+
+A *variant* is a sequence of activities. Two cases belong to the same variant if they exhibit the same sequence of activities, i.e., treatment actions. Trace is another term for the sequence of activities of a case. We can visualize the distribution over variants to get a better idea of how patients are treated.
+
+```{r}
+log %>%
+    trace_explorer(n_traces = 10)
+```
+
+Variant analysis also equips us with a powerful tool to examine and compare treatments between different patient groups. We show this for patients with a suspected infection and patients without a suspected infection.
+
+```{r}
+log %>%
+    filter(InfectionSuspected =="true") %>%
+    trace_explorer(n_traces = 10)
+```
+
+```{r}
+log %>%
+    filter(InfectionSuspected =="false") %>%
+    trace_explorer(n_traces = 10)
+```
+
+> ### Exercise
+>
+> Compare the treatment variants for patients above and below 50 years
+>
+> > ### Solution
+> >
+> > {: .solution} {: .challenge}
+
+```{r}
+log %>%
+     filter(Age < 50) %>%
+     trace_explorer(n_traces = 10)
+log %>%
+     filter(Age > 50) %>%
+     trace_explorer(n_traces = 10)
+```
+
+## Process Discovery
+
+Variant Analysis can become quite cumbersome if there are a lot of variants. The manual comparison could be infeasible. Process discovery offers a way to combine all variants into one process model that describes the possible variants. A process map (also process model or directly-follows graph) shows activities as nodes (rectangles) and possible direct succession relationships using arrows.
+
+We show an example of a process map for the most frequent variants:
+
+```{r}
+log %>%
+  filter_trace_frequency(interval = c(20,NA)) %>%
+  process_map()
+```
+
+Based on the process map, we can derive some statements about all patients' flow through the process. For example, all patients start with the ER Registration. For some patients (35 patients), the treatment stops after the registration, i.e., no further steps are conducted. The other patients get both CRP and Leucocytes treatments but in different orders.
+
+We can use the process map to compare the full treatment processes between patient groups. We, again, separate the patient based on the suspected infection. For both groups, we discover the process map of the 25% most frequent treatment variants.
+
+```{r}
+log %>%
+  filter(InfectionSuspected =="false") %>%
+  filter_trace_frequency(percentage = 0.25) %>%
+  process_map()
+```
+
+```{r}
+log %>%
+  filter(InfectionSuspected =="true") %>%
+  filter_trace_frequency(percentage = 0.25) %>%
+  process_map()
+```
+
+The treatment process of the patients with a suspected infection exhibits much more complexity. This also showcases the limitations of process maps when analyzing treatment flows: With complex processes and many activities, the models quickly become incomprehensible to the human eye.
