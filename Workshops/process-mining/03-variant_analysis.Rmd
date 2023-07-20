@@ -25,7 +25,7 @@ First, we load the event log.
 
 ```{r}
 library(bupaverse)
-log <- read.csv("sepsis_event_log.csv")
+log <- read.csv("../Data/sepsis_event_log.csv")
 log <- log %>%
   # first, we need to rename columns such that the library understands which information is contained in them
   dplyr::rename(start = startTime, 
