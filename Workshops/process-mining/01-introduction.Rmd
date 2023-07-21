@@ -1,0 +1,137 @@
+---
+title: "01 - Introduction"
+subtitle: "Process Mining"
+author: "Jan Niklas Adams"
+date: "2023-07-12"
+questions:
+- "What are the limitations of traditional tabular data?"
+- "How can they be mitigated through the event log format?"
+- "What is process mining?"
+objectives:
+- "Understand the limitations of traditional tabular data analysis."
+- "Understand the event log format and what it expresses."
+- "Get an overview of process mining algorithms and their potential applications to healthcare."
+keypoints:
+- "Traditional tabular data analysis has limitations when incorporating contextual, timing, and order information for variable data."
+- "Event logs and process mining algorithms can incorporate such information."
+- "Healthcare application for process mining has, so far, only barely been applied."
+output: 
+  html_document:
+    toc: true
+---
+
+## Limitations of Tabular Data
+
+So far, we have looked at data through a tabular lens: Every single data point represents one patient and all the information about the patient should be contained in that single data point. However, patient data is often composed of different treatments at different points in time. Not incorporating this leads to loss of contextual information and timing information.
+
+Let's say we have the following data about patients:
+
+| Patient ID | Antibiotics Amount | Antibiotics Type | SOFA |
+|------------|--------------------|------------------|------|
+| 132        | 20mg               | X                | 3    |
+| 134        | 34mg               | Y                | 4    |
+| 152        | 21mg               | Z                | 2    |
+
+Now we would like to incorporate more data to get a more wholesome view of the treatment. First, we want to add other parts of the treatment. Second, we would like to track multiplicities of the same treatment. Third, we would like to express timely orders between treatments. We will show the issues of tabular data with incorporating such fundamental information.
+
+### Incorporating different treatments
+
+We add two additional columns that describe the ventilation of patients. However, not all patients were ventilated, therefore, there are some empty cells.
+
+| Patient | Antibiotics Amount | Antibiotics Type | SOFA | Ventilation Duration | Tube Size |
+|------------|----------------|--------------|-------|-----------------|------------|
+| 132     | 20mg               | X                | 3    | 5h                   | 2         |
+| 134     | 34mg               | Y                | 4    | \-                   | \-        |
+| 152     | 21mg               | Z                | 2    | \-                   | \-        |
+
+Problem 1: Incorporating different actions taken during treatment will lead to very sparse data when there is a high variability for which patients undergo which treatment actions. this leads to memory issues.
+
+### Incorporating multiplicity of treatments
+
+The antibiotics doses in the previous table are aggregated amounts. We would like to express the individual administration of antibiotics. We add additional columns. When there is variation in the amounts of treatments, we have to including empty cells.
+
+| Patient ID | First AB Amount | First AB Type | SOFA | Second AB Amount | Second AB Type | SOFA |
+|----------|-------------|------------|------|----------------|-------------|--------|
+| 132        | 20mg            | X             | 3    | \-               | \-             | \-   |
+| 134        | 20mg            | Y             | 4    | 14mg             | Y              | 3    |
+| 152        | 21mg            | Z             | 2    | \-               | \-             | \-   |
+
+Problem 2: Multiplicities of treatments can only be incorporated when introducing the same memory issues as seen with problem 1.
+
+### Incorporating treatment times and order
+
+The previous tables did not incorporate timing or ordering information, e.g., was the patient first ventilated or given antibiotics. We can add it explicitly, however, the order of treatment actions is never directly encoded and always has to be inferred through the numbering.
+
+| Pat. | AB Pos. | AB Time | AB Am. | AB Type | SOFA | Vent. Pos. | Vent. Time | Vent. Dur. | Tube Size |
+|------|--------|--------|--------|--------|--------|---------|---------|---------|--------|
+| 132  | 2       | 10pm    | 20mg   | X       | 3    | 1          | 8pm        | 5h         | 2         |
+| 134  | 1       | 8am     | 34mg   | Y       | 4    | \-         | \-         | \-         | \-        |
+| 152  | 1       | 11am    | 21mg   | Z       | 2    | \-         | \-         | \-         | \-        |
+
+Problem 3: Ordering and timing information is not a first-class citizen in tabular data.
+
+We need to store the data in a different format to efficiently incorporate information about different treatment steps at different points in time.
+
+> ### Exercise
+>
+> How could these limitations of traditional tabular data hinder the analysis of healthcare data?
+>
+> > ### Solution
+> >
+> > -   Loss of contextual information: Additional treatment actions that vary between patients can offer important explanations for different effectiveness and outcomes of treatments. When additional treatments that vary between patients have to be left out, this eliminates important confounding factors.
+> > -   Loss of timing and ordering information: Next to the presence of a specific treatment action, the ordering of different actions and the time of treatment or between treatments can be an important factor to the outcome.
+> > -   Non-sufficient granularity in analysis, over-aggregating of values: When a treatment action is repeated, the aggregation of different values, e.g., amounts, could be important factors. Aggregating this to a single value can lead to loss of information and relationships.
+> >
+> > {: .solution} {: .challenge}
+
+## The Event Log
+
+We address these limitations of traditional tabular data by using an event log. An event log consists of events. Each event is associated to a case identifier, e.g., a patients, an undertaken activity, e.g., a treatment action, a timestamp, e.g., the time of treatment, and additional data specific to that activity.
+
+Example of an event:
+
+| Case     | Activity    | Timestamp | Vent. Dur. | Tube Size |
+|----------|-------------|-----------|------------|-----------|
+| Pat. 132 | Ventilation | 8pm       | 5h         | 2         |
+
+We group all events of the same case identifier to form the case, i.e., the sequence of events.
+
+| Case     | Activity    | Timestamp | Vent. Dur. | Tube Size | AB Amount | AB Type | SOFA |
+|---------|---------|----------|---------|---------|---------|---------|---------|
+| Pat. 132 | Ventilation | 8pm       | 5h         | 2         | \-        | \-      | \-   |
+| Pat. 132 | Antibiotics | 10pm      | \-         | \-        | 20mg      | X       | 3    |
+
+And all cases together form the event log.
+
+| Case     | Activity    | Timestamp | Vent. Dur. | Tube Size | AB Amount | AB Type | SOFA |
+|---------|---------|----------|---------|---------|----------|---------|---------|
+| Pat. 132 | Ventilation | 8pm       | 5h         | 2         | \-        | \-      | \-   |
+| Pat. 132 | Antibiotics | 10pm      | \-         | \-        | 20mg      | X       | 3    |
+| Pat. 134 | Antibiotics | 8am       | \-         | \-        | 20mg      | Y       | 4    |
+| Pat. 134 | Antibiotics | 7pm       | \-         | \-        | 14mg      | Y       | 3    |
+| Pat. 152 | Antibiotics | 11am      | \-         | \-        | 21mg      | Z       | 2    |
+
+## Process Mining
+
+Process mining describes the discipline of generating knowledge about the underlying processes from event logs. In general, we differentiate between different types of knowledge that can be retrieved through algorithms:
+
+-   **Process Discovery & Variant Analysis**: What are the observed flows of activities in the process?
+
+-   **Conformance Checking:** Does the process conform to some specification and how could deviations be aligned with the specifications?
+
+-   **Performance Analysis:** What are bottlenecks in the process?
+
+-   **Operational support:** Prediction and recommendation of outcomes and actions in an ongoing process.
+
+> ### Exercise
+>
+> Find examples of how the different algorithms can be applied to healthcare to provide novel types of insights.
+>
+> > ### Solution
+> >
+> > -   Process Discovery & Variant Analysis: Comparison of patient flow through the treatment process based on different characteristics, investigating biases.
+> > -   Conformance Checking: Investigating whether the actual treatment of patients goes hand-in-hand with the recommended guidelines.
+> > -   Performance Analysis: Associating certain bottlenecks with outcomes, investigating potential cause-effects.
+> > -   Operational Support: Providing recommendation of next treatment steps given the last treatment steps of the patient and contextual information.
+> >
+> > {: .solution} {: .challenge}
