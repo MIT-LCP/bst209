@@ -31,26 +31,28 @@ log <- read.csv("../Data/sepsis_event_log.csv")
 log
 ```
 
-We need to convert the CSV-file we have imported as a data.frame into an event log format that can be processed by the library.
+We need to convert the CSV-file we have imported as a dataframe into an event log format that can be processed by the library.
 
 ```{r}
-# we need to load the BupaR library for process mining
+
+# We need to load the BupaR library for process mining
 library(bupaverse)
 log <- log %>%
-  # first, we need to rename columns such that the library understands which information is contained in them
+  
+  # First, we need to rename columns such that the library understands which information is contained in them
   dplyr::rename(start = startTime, 
            complete = completeTime) %>%
-  # we need to convert the timestamp columns to actual timestamps
+  
+  # We need to convert the timestamp columns to actual timestamps
   convert_timestamps(columns = c("start", "complete"), format = ymd_hms) %>%
   
-  #we tell the library how to interpret the other columns as cases, activities, timestamps, and resources. The specific type of event log is called "activity log" for this library
+  # We tell the library how to interpret the other columns as cases, activities, timestamps, and resources. The specific type of event log is called "activity log" for this library
   activitylog(case_id = "patient",
                 activity_id = "treatment",
                 timestamps = c("start","complete"),
                 resource_id = "org.group") %>%
   act_unite(Release = c("Release A","Release B","Release C", "Release D", "Release E")) %>%
   filter_activity(c("ER Sepsis Triage","ER Triage"), reverse =T)
-log      
 ```
 
 We can take a look at the event log, e.g., the number of patients, the number of events per patient, etc.

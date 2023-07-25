@@ -1,0 +1,240 @@
+---
+title: "04-Outlook"
+author: "Jan Niklas Adams"
+date: "2023-07-20"
+questions:
+- "What are examples of conformance checking?"
+- "How to conduct performance analysis?"
+- "How can I apply machine learning to event logs?"
+objectives:
+- "Provide an outlook into confromance checking."
+- "Introduce basic performance analysis tools."
+- "Understand the pipeline to conduct machine learning on event logs."
+keypoints:
+- "Conformance checking can be employed to monitor the compliance to specified rules."
+- "Performance analysis oofers tools to drill down into the performance differences of cases."
+- "Machine learning on event logs requires special attention to the sequence of cases and information leakage in train and test data."
+output: 
+  html_document:
+    toc: true
+---
+
+```{r}
+library(bupaverse)
+log <- read.csv("../Data/sepsis_event_log.csv")
+log <- log %>%
+  
+  # First, we need to rename columns such that the library understands which information is contained in them
+  dplyr::rename(start = startTime, 
+           complete = completeTime) %>%
+  
+  # Convert the timestamp columns to actual timestamps
+  convert_timestamps(columns = c("start", "complete"), format = ymd_hms) %>%
+  
+  # Tell the library how to interpret the other columns as cases, activities, timestamps, and resources. The specific type of event log is called "activity log" for this library
+  activitylog(case_id = "patient",
+                activity_id = "treatment",
+                timestamps = c("start","complete"),
+                resource_id = "org.group") %>%
+  
+  # Merge the Release activities into one
+  act_unite(Release = c("Release A","Release B","Release C", "Release D", "Release E")) %>%
+  
+  # Remove these activities as they are mostly redundant
+  filter_activity(c("ER Sepsis Triage","ER Triage"), reverse =T)
+
+```
+
+## Outlook
+
+We have seen the rationale for using process mining and event logs, how to handle and explore them, and how to conduct an analysis of the variants and process maps. We will provide a short outlook on the other types of process mining algorithms and their potential use cases here.
+
+## Conformance Checking
+
+In conformance checking, we would like to assess whether the execution of the process in real life does conform to certain specifications. These specifications could, e.g., stem from regulations or guidelines for treatments. We can explicitly define rules, check the cases against these rules, and show the results. For demonstration purposes, we choose the rule of CRP directly following after Leucocytes.
+
+```{r}
+log %>%
+    check_rule(succession("Leucocytes","CRP"), label = "r1") %>%
+    group_by(r1) %>%
+    n_cases()
+```
+
+When analyzing the number of cases, we observe that this happens for roughly 40% of cases and does not happen for the remaining 60% of cases.
+
+Based on the conformance with such rules, we can conduct an advanced analysis. In this example, we can investigate whether the general prevalence of certain treatment actions is different for patients that conform to the rule and patients that do not.
+
+```{r}
+log %>%
+    check_rule(succession("Leucocytes","CRP"), label = "r1") %>%
+    group_by(r1) %>%
+    activity_presence() %>%
+    plot()
+```
+
+Please note: If there is neither Leucocytes nor CRP for a patient, the rule is seen as fulfilled, therefore, the prevalence of both activities in the true partition is not 100%.
+
+## Performance Analysis
+
+When using performance analysis, we mostly want to investigate the timely nature of the process. When using a process map, we can replay the patients' path through this process scaled by their time in the process to get an overview of timely dynamics. We use another version of the event log with more associated data.
+
+```{r}
+library(processanimateR)
+library(dplyr)
+library(bupaR)
+
+# Extract only the lacticacid measurements
+lactic <- sepsis %>%
+    mutate(lacticacid = as.numeric(lacticacid)) %>%
+    filter_activity(c("LacticAcid")) %>%
+    as.data.frame() %>%
+    select("case" = case_id, 
+            "time" =  timestamp, 
+            value = lacticacid) # format needs to be 'case,time,value'
+
+# Remove the measurement events from the sepsis log
+sepsisBase <- sepsis %>%
+    filter_activity(c("LacticAcid", "CRP", "Leucocytes", "Return ER",
+                      "IV Liquid", "IV Antibiotics"), reverse = T) %>%
+    filter_trace_frequency(percentage = 0.95)
+
+# Animate with the secondary data frame `lactic`
+animate_process(sepsisBase, 
+                mode = "relative", 
+                duration = 300,
+                legend = "color", 
+                mapping = token_aes(color = token_scale(lactic, 
+                                                        scale = "linear", 
+                                                        range = c("#fff5eb","#7f2704")))) 
+```
+
+While this provides a great overview, we can also dive deeper into performance metrics. We can plot the timely dynamic of every individual case to find commonalities in delays between activities or batching behavior, i.e., the same activity of different cases being executed all together.
+
+```{r}
+library(psmineR)
+log %>%
+  ps_detailed()
+```
+
+We can also aggregate this view to see how long the time between different activities is. Using this view, we can aggregate according to different criteria and assess the difference between groups.
+
+```{r}
+log %>%
+    group_by(InfectionSuspected) %>%
+    ps_aggregated()
+```
+
+## Operational Support
+
+We want to show an example of how to employ machine learning on event logs here. We want to predict the next things that will happen to a patient based on the things that have happened so far. This is caled next activity prediction. We will use a simple logistic regression.
+
+```{r}
+library(processpredictR)
+library(dplyr)
+library(nnet)
+library(caret)
+```
+
+First, we have to extract the target variable and preprocess the data. The prefixes, i.e., the things that have happened so far to the patient, have to be converted from a list to a one-hot encoding. In this scenario, we only use the first three events of each patient to reduce the size of the dataset.
+
+```{r}
+# Extracting the target variable of the next activity
+df <- prepare_examples(log, task = "next_activity")
+
+# We only use one of the first three events to keep the data set small
+df <- df %>%
+    group_by(patient) %>%
+    filter(row_number() <= 3) %>%
+    ungroup() 
+
+# Unlist the prefix_list to get all unique values
+df$prefix_str <- sapply(df$prefix_list, function(x) paste(sort(x), collapse = ","))
+
+# Convert the strings to a factor
+df$prefix_factor <- as.factor(df$prefix_str)
+
+# Create dummy variables (one-hot encoding) from the factor
+prefix_dummies <- model.matrix(~prefix_factor-1, df)
+
+# Convert the matrix to a data frame and bind it to the original data frame
+prefix_dummies_df <- as.data.frame(prefix_dummies)
+df <- cbind(df, prefix_dummies_df)
+
+# Drop the prefix factor column
+df$prefix_factor <- NULL
+df
+```
+
+We need to split the data into train and test data. We have to be careful here that events of the same patient do always end up in the same set to avoid information leakage. We validate that at the end of this code block.
+
+```{r}
+patient_ids <- unique(df$patient)
+
+# Randomly shuffle the patient IDs
+set.seed(1)  # for reproducibility
+shuffled_patient_ids <- sample(patient_ids)
+
+# Split the shuffled patient IDs into training and test sets
+train_ids <- shuffled_patient_ids[1:round(length(shuffled_patient_ids) * 0.7)]
+test_ids <- setdiff(shuffled_patient_ids, train_ids)
+
+# Select the rows for the training and test sets based on the patient IDs
+train_set <- df %>% filter(patient %in% train_ids)
+test_set <- df %>% filter(patient %in% test_ids)
+train_set %>% head(5)
+test_set %>% head(5)
+```
+
+We now train a logistic regression to predict the next activity. We evaluate it based on the test set.
+
+```{r}
+# Replace spaces with underscores in column names to avoid issues with the formula compiler
+names(train_set) <- gsub(" ", "_", names(train_set))
+names(test_set) <- gsub(" ", "_", names(test_set))
+names(train_set) <- gsub(",", "_", names(train_set))
+names(test_set) <- gsub(",", "_", names(test_set))
+
+# Get the names of the one-hot encoded prefix variables
+prefix_vars <- grep("^prefix_factor", names(train_set), value = TRUE)
+
+# Remove null or empty entries
+prefix_vars <- prefix_vars[!prefix_vars %in% c("", NULL)]
+
+# Combine these with the names of the other predictors
+predictors <- c(prefix_vars)
+
+# Create the formula string for the logistic regression model
+formula_str <- paste("next_activity ~", paste(predictors, collapse = " + "))
+
+
+# Fit the model
+fit <- multinom(as.formula(formula_str), data = train_set)
+
+# Get predicted classes on the test data
+pred_class <- predict(fit, newdata = test_set)
+
+# Evaluate the model
+cm <- confusionMatrix(as.factor(pred_class), as.factor(test_set$next_activity))
+```
+
+We can visulize the confusion matrix to investigate the performance of the model. Based on the previous activities and their order, the regression can derive some knowledge about the next activity. This could probably be improved by incorporating more data into the model or by making the model more complex.
+
+```{r}
+# visualize confusion matrix
+library(ggplot2)
+library(reshape2)
+
+# Convert the confusion matrix to a table
+cm_table <- as.table(cm$table)
+
+# Convert to a dataframe and reshape for ggplot
+cm_df <- as.data.frame.table(cm_table)
+
+# Visualize with ggplot
+library(ggplot2)
+ggplot(data = cm_df, aes(x = Reference, y = Prediction, fill = Freq)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+```

@@ -39,7 +39,7 @@ Now we would like to incorporate more data to get a more wholesome view of the t
 We add two additional columns that describe the ventilation of patients. However, not all patients were ventilated, therefore, there are some empty cells.
 
 | Patient | Antibiotics Amount | Antibiotics Type | SOFA | Ventilation Duration | Tube Size |
-|------------|----------------|--------------|-------|-----------------|------------|
+|------------|------------|------------|------------|------------|------------|
 | 132     | 20mg               | X                | 3    | 5h                   | 2         |
 | 134     | 34mg               | Y                | 4    | \-                   | \-        |
 | 152     | 21mg               | Z                | 2    | \-                   | \-        |
@@ -48,10 +48,10 @@ Problem 1: Incorporating different actions taken during treatment will lead to v
 
 ### Incorporating multiplicity of treatments
 
-The antibiotics doses in the previous table are aggregated amounts. We would like to express the individual administration of antibiotics. We add additional columns. When there is variation in the amounts of treatments, we have to including empty cells.
+The antibiotics doses in the previous table are aggregated amounts. We would like to express the individual administration of antibiotics. We add additional columns. When there is variation in the amounts of treatments, we have to include empty cells.
 
 | Patient ID | First AB Amount | First AB Type | SOFA | Second AB Amount | Second AB Type | SOFA |
-|----------|-------------|------------|------|----------------|-------------|--------|
+|-----------|-----------|-----------|-----------|-----------|-----------|-----------|
 | 132        | 20mg            | X             | 3    | \-               | \-             | \-   |
 | 134        | 20mg            | Y             | 4    | 14mg             | Y              | 3    |
 | 152        | 21mg            | Z             | 2    | \-               | \-             | \-   |
@@ -63,7 +63,7 @@ Problem 2: Multiplicities of treatments can only be incorporated when introducin
 The previous tables did not incorporate timing or ordering information, e.g., was the patient first ventilated or given antibiotics. We can add it explicitly, however, the order of treatment actions is never directly encoded and always has to be inferred through the numbering.
 
 | Pat. | AB Pos. | AB Time | AB Am. | AB Type | SOFA | Vent. Pos. | Vent. Time | Vent. Dur. | Tube Size |
-|------|--------|--------|--------|--------|--------|---------|---------|---------|--------|
+|--------|--------|--------|--------|--------|--------|--------|--------|--------|--------|
 | 132  | 2       | 10pm    | 20mg   | X       | 3    | 1          | 8pm        | 5h         | 2         |
 | 134  | 1       | 8am     | 34mg   | Y       | 4    | \-         | \-         | \-         | \-        |
 | 152  | 1       | 11am    | 21mg   | Z       | 2    | \-         | \-         | \-         | \-        |
@@ -97,14 +97,14 @@ Example of an event:
 We group all events of the same case identifier to form the case, i.e., the sequence of events.
 
 | Case     | Activity    | Timestamp | Vent. Dur. | Tube Size | AB Amount | AB Type | SOFA |
-|---------|---------|----------|---------|---------|---------|---------|---------|
+|---------|---------|---------|---------|---------|---------|---------|---------|
 | Pat. 132 | Ventilation | 8pm       | 5h         | 2         | \-        | \-      | \-   |
 | Pat. 132 | Antibiotics | 10pm      | \-         | \-        | 20mg      | X       | 3    |
 
 And all cases together form the event log.
 
 | Case     | Activity    | Timestamp | Vent. Dur. | Tube Size | AB Amount | AB Type | SOFA |
-|---------|---------|----------|---------|---------|----------|---------|---------|
+|---------|---------|---------|---------|---------|---------|---------|---------|
 | Pat. 132 | Ventilation | 8pm       | 5h         | 2         | \-        | \-      | \-   |
 | Pat. 132 | Antibiotics | 10pm      | \-         | \-        | 20mg      | X       | 3    |
 | Pat. 134 | Antibiotics | 8am       | \-         | \-        | 20mg      | Y       | 4    |
