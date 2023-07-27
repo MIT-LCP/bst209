@@ -1,0 +1,305 @@
+---
+title: "Workshop0"
+date: "2023-07-27"
+output:
+  html_document: default
+  pdf_document: default
+editor_options:
+  markdown:
+    wrap: sentence
+---
+
+
+# Workshop 0️⃣ Preparatory Materials
+Please go through these materials before attending further Workshops.
+
+## What is a Datathon?
+
+A datathon is a collaborative event designed to bring clinicians and data scientists together in the development of data-driven models. This process involves the use of de-identified datasets from different sources, such as electronic health records. The main objective is to analyze these datasets using both data science and medical knowledge.
+
+A datathon combines medical science and data science to solve real-world problems with existing datasets. It encourages participants from diverse professional backgrounds, including clinicians, researchers, and data scientists. Its ultimate goal is to identify potential projects that could lead to significant contributions in their respective fields. This event promotes problem-solving and data analytics skills, making it a vital instrument to learn Medical Data Science.
+
+## What are the learning objectives?
+
+Clinicians do not need to have existing data science knowledge; Data Scientists do not need extensive medical background.
+
+That being said, the overarching objectives of the workshop, designed in the format of a datathon, are to:
+
+* Familiarize clinicians with the applications of data science in the realm of medical research.
+* Acquaint data scientists with real-world medical data, mainly sourced from Electronic Health Records (EHR).
+* Foster collaboration between clinicians and data scientists to ensure a comprehensive understanding of the research question, the data at hand, the variables involved, and to identify clinically relevant machine learning approaches.
+* Equip clinicians with the ability to translate their research questions and hypotheses into data science language, introduce them to tools like Python, Pandas, Machine Learning, and notebooks in Google Colab.
+* Enable clinicians to independently formulate viable Machine Learning pipelines for their future questions and problems based on the given resources.
+* Emphasize that the goal is to stimulate discussion rather than find right or wrong answers to the questions presented, highlighting the importance of balancing trade-offs in real-world problems and the necessity of involving both parties in the process.
+* Promote the notion of medical data science as a team science, emphasizing the importance of effective communication between data scientists and clinicians. This includes fostering the ability for data scientists to communicate their findings to clinicians and similarly, for clinicians to express their needs and questions effectively to data scientists.
+
+
+## Case Study and Motivation 
+
+Pulse oximeters are medical devices used to assess peripheral arterial oxygen saturation ($SpO_2$) noninvasively. In contrast, the "gold standard" requires arterial blood to be drawn to measure the arterial oxygen saturation ($SaO_{2}$). Pulse oximeters currently on the market measure  in populations with darker skin tones with lower accuracy.
+
+Pulse oximetry inaccuracies can fail to detect episodes of hidden hypoxemia, i.e., low $SaO_{2}$ with high $SpO_2$. Hidden hypoxemias can result in less treatment and increased mortality. Yet flawed, pulse oximeters remain ubiquitously used because of their ease of use; debiasing the underlying algorithms could alleviate the downstream repercussions of hidden hypoxemia.
+
+## 1. Literature Review
+
+Here is some recent literature that motivates this Case Study.
+
+A comprehensive living literature compilation has been put together by [Open Oximetry](https://openoximetry.org/publications/). Explore it, if you are curious to learn more!
+
+However, these 5 papers below are our main recommendations.
+
+You have a summary below, but can access the full articles in the
+[Google Drive Folder](https://drive.google.com/drive/folders/1fey9LDUynWk2ZgVKeFc9B2tfnrlyiR7c?usp=share_link).
+
+If you are short on time, we recommend the first 2-3 papers as a must read, and the other ones are optional.
+
+### 📄 [Paper 1](https://drive.google.com/file/d/14IirFD9SnVvmiD4W3KMXYmc2eQVwcSlB/view?usp=share_link) (letter)
+**Racial Bias in Pulse Oximetry Measurement**
+
+
+
+*This study of 48,097 pair of measures from University of Michigan report nearly three times more occult hypoxemia in Black patients compared to White patients. However, not all Black patients with pulse oxymetry of 92-96% had occult hypoxemia, with the correction factor not straightforward.*
+
+Sjoding MW, Dickson RP, Iwashyna TJ, Gay SE, Valley TS. Racial Bias in Pulse Oximetry Measurement. N Engl J Med. 2020 Dec 17;383(25):2477-2478. doi: 10.1056/NEJMc2029240. Erratum in: N Engl J Med. 2021 Dec 23;385(26):2496. PMID: 33326721; PMCID: PMC7808260. https://www.nejm.org/doi/10.1056/NEJMc2029240
+
+
+### 📄 [Paper 2](https://drive.google.com/file/d/15H9rYmtFrHGE3BjqxpChZOQNgHLZsjs-/view?usp=share_link) (original research)
+**Analysis of Discrepancies Between Pulse Oximetry and Arterial Oxygen Saturation Measurements by Race and Ethnicity and Association With Organ Dysfunction and Mortality**
+
+*In this cross-sectional study of 5 databases with 87 971 patients,
+significant disparities in pulse oximetry accuracy across racial and ethnic subgroups (ie, Asian, Black, Hispanic, and White individuals) were found, with higher rates of hidden hypoxemia associated with mortality, future organ dysfunction, and abnormal laboratory test results.*
+
+Wong AI, Charpignon M, Kim H, et al. Analysis of Discrepancies Between Pulse Oximetry and Arterial Oxygen Saturation Measurements by Race and Ethnicity and Association With Organ Dysfunction and Mortality. JAMA Netw Open. 2021;4(11):e2131674. https://jamanetwork.com/journals/jamanetworkopen/fullarticle/2785794
+
+
+### 📄 [Paper 3](https://drive.google.com/file/d/1JbfOuWENSHAzn5f6ztTZXwnZGkUfbiZZ/view?usp=share_link) (original research)
+**Assessment of Racial and Ethnic Differences in Oxygen Supplementation Among Patients in the Intensive Care Unit**
+
+*In this cohort study of 3069 patients in the intensive care unit, Asian, Black, and Hispanic patients had a higher adjusted time-weighted average pulse oximetry reading and were administered significantly less supplemental oxygen for a given average hemoglobin oxygen saturation compared with White patients.*
+
+Gottlieb ER, Ziegler J, Morley K, Rush B, Celi LA. Assessment of Racial and Ethnic Differences in Oxygen Supplementation Among Patients in the Intensive Care Unit. JAMA Intern Med. 2022;182(8):849–858. https://jamanetwork.com/journals/jamainternalmedicine/article-abstract/2794196
+
+
+
+### 📄 [Paper 4](https://drive.google.com/file/d/1PUtDG5TWKvClljRHokx1fl60mzU7zCy5/view?usp=share_link) (review)
+
+**Racial Disparity in Oxygen Saturation Measurements by Pulse Oximetry**
+
+*In this article, we review available data regarding the accuracy of pulse oximeters for individuals with dark skin tones, as well as the clinical implications of device inaccuracy at both a patient and public health level. Moreover, we emphasize the urgent need to address the problem of pulse oximeter inaccuracy for individuals with dark skin tones and provide suggestions for the next steps to address the resulting racial health disparity.*
+
+Jamali, H., Castillo, L. T., Morgan, C. C., Coult, J., Muhammad, J. L., Osobamiro, O. O., Parsons, E. C., & Adamson, R. (2022). Racial Disparity in Oxygen Saturation Measurements by Pulse Oximetry: Evidence and Implications. Annals of the American Thoracic Society, 19(12), 1951–1964. https://doi.org/10.1513/AnnalsATS.202203-270CME
+
+
+### 📄 [Paper 5](https://drive.google.com/file/d/1EmAe4a1tQPnWifVOhST4jmCDeD9C1Hx6/view?usp=share_link) (letter)
+
+**Dynamic Errors in Pulse Oximetry Preclude Use of Correction Factor**
+
+*In “Racial Disparity in Oxygen Saturation Measurements by Pulse Oximetry: Evidence and Implications” [Paper 4 of this workshop] the authors raise the possibility of implementing a skin-tone correction factor to compensate for the overestimation of arterial oxygen saturation ($SaO_2$) by pulse oximeters ($SpO_2$) among individuals with darker skin. We wish to highlight more recent data that suggest this strategy would not rectify the error but rather cement the inequity imposed by current technology and worsen disparities by disproportionately harming patients of color.*
+
+(...) *More concerning, three-quarters of patients had bidirectional errors over time, such that pulse oximeters both under- and overestimated oxygen saturation for the same subject at different time points.*
+
+Fawzy, A., Valbuena, V. S. M., Chesley, C. F., Wu, T. D., & Iwashyna, T. J. (2023). Dynamic Errors in Pulse Oximetry Preclude Use of Correction Factor. Annals of the American Thoracic Society, 20(2), 338–339. https://doi.org/10.1513/AnnalsATS.202210-872LE
+
+
+### Quick Summary for Papers 1 - 3
+
+| Article # | Study Aim | Definition of Hidden Hypoxemia (HH) | Study Population | Inclusion Criteria | Exclusion Criteria | Primary Outcome | Results |
+| - | - | - | - | - | - | - | - |
+| Paper 1 | \- To evaluate the impact of potential racial bias in pulse oximetry measurement | \- SaO2 <88% despite of 92%≤ SpO2 ≤96%<br>\- SaO2 and SpO2 were paired when they were performed within 10 minutes of each other | \- Adult inpatients who were receiving supplemental oxygen at the University of Michigan Hospital <br> &ensp; and patients in ICUs at 178 hospitals (multicenter cohort)<br>\- 1,333 White patients and 276 Black patients in the University of Michigan cohort<br>\- 7,342 White patients and 1,050 Black patients in the multicenter cohort | \- Patients who identified their race as Black or White and had a pair of pulse oximetry measures of oxygen saturation <br> &ensp; and measures of arterial oxygen saturation in ABG, with all evaluations performed within 10 minutes of each other | \- ABG that did not include carboxyhemoglobin and methemoglobin saturations | \- The proportion of HH in Black or White patients | \- HH was found in 11.7% of Black patients and 3.6% of White patients in Michigan cohort, <br> &ensp; and 17.0% of Black patients and 6.2% of White patients in multicenter cohort |
+| Paper 2 | \- To analyze the discrepancies between SpO2 and SaO2 measurements by race and ethnicity, <br> &ensp; and to examine their association with organ dysfunction and mortality | \- SaO2 <88% while 88%≤ SpO2<br>\- SaO2 and SpO2 were paired if SpO2 values were recorded 5 minutes preceding the ABG test | \- Data were extracted from 5 EHR databases (eICU-CRD, MIMIC-III and MIMIC-IV, Emory Healthcare and Grady Memorial)<br>\- 87,971 patients with a mean age of 62.2 years old and 42.9% women<br>\- The study group consisted of 65.5% White, 29.6% Black, 2.7% Hispanic, and 2.3% Asian | \- SpO2 records with range of 88% to 100%<br>\- At least one SpO2 measurement recorded within 5 minutes preceding the ABG test<br>\- only the first ABG measurement from each hospital encounter was used | \- Missing data on race or ethnicity, ABG or SpO2 measurements, or other key variables<br>\- If any of characteristics in age, sex, race and ethnicity, and CVSOFA score were missing, <br> &ensp; the patient was excluded from the corresponding subgroup analysis but included in the overall analysis. | \- The association HH and clinical outcomes, including in-hospital mortality, <br> &ensp; ICU length of stay, and organ dysfunction stratified by race and ethnicity | \- HH was found in all subgroups with varying incidence (Black: 6.9%; Hispanic: 6.0%; Asian: 4.9%; White: 4.9%)<br>\- HH was associated with higher SOFA score 24 hours after the ABG measurement, higher in-hospital mortality, <br> &ensp; and higher lactate levels before and 24 hours after the ABG test, with less lactate clearance |
+| Paper 3 | \- To assess if there are disparities in supplemental oxygen administration between Asian, Black, <br> &ensp; and Hispanic patients and White patients in the ICU<br>\- To assess whether they are associated with discrepancies in pulse oximeter performance | \- N/A | \- 76,540 ICU stays for 53,150 unique patients at Beth Israel Deaconess Medical Center were extracted from MIMIC- IV<br>\- 25,340 patients with supplemental oxygen data were included<br>\- 3,069 patients with a mean age of 66.9 years old were analyzed<br>\- The study participatns consisted of 86.9% White, 6.7% Black, 3.6% Hispanic, and 2.7% Asian | \- Patients who have records of supplemental oxygen (or room air) data<br>\- Data were limited to the first period of up to 5 days from ICU admission or until the time point at which the patient received invasive or <br> &ensp; noninvasive mechanical ventilation, high-flow nasal cannula, or a tracheostomy, whichever came first (index period) | \- Patients who did not have a documented race or ethnicity of Asian, Black, Hispanic, or White<br>\- Patients who were missing key variables, including supplemental oxygen records, initial pCO2, Hb level, <br> &ensp; vital sign data, and/or had an index period of less than 12 hours<br>\- Records with SpO2 less than 70% or greater than 100% | \- Time- weighted average supplemental oxygen rate | \- Asian, Black, and Hispanic race and ethnicity were all associated with a higher SpO2 for a given SaO2<br>\- Asian, Black, and Hispanic race and ethnicity were associated with lower average oxygen delivery rates |
+
+## 2. Specfic Objective of the Datathon
+
+The worldwide utilization of Pulse Oximeters demands urgent action to prevent further downstream harm. While new devices are being designed, a new approach to recalibrate existing devices is necessary, with the goal of mitigating racial-ethnic based underperformance. To the best of our knowledge, this has not been done before.
+
+We aim to fill this gap by creating a correction model for $SpO_2$ using Machine Learning (ML) methods.
+
+**The hypothesis is that recalibration can be achieved by leveraging an ML model that is fed with $SpO_2$ measurements, alongside with patient demographics, physiological data, and specific treatment information.**
+
+## 3. Data Access Prerequisites
+
+The MIMIC datasets are access-controlled by [PhysioNet](https://physionet.org/).
+
+Follow the instructions in the bottom of the PhysioNet Dataset page to get access to the data. Overall, you must:
+
+* Be a credentialled PhysioNet user,
+* Complete the appropriate institutional research training (CITI training in human research subject protection and HIPAA regulations) and get it verified by PhysioNet,
+* Sign the Data Use Agreement
+
+**Useful Materials**
+
+* [MIMIC - Get Started Tutorial](https://mimic.mit.edu/docs/gettingstarted/)
+* [CITI Course Instructions](https://physionet.org/about/citi-course/#:~:text=In%20order%20to%20become%20a,subject%20protections%20and%20HIPAA%20regulations.)
+
+## 4. The Dataset
+
+### [MIT Critical Datathon 2023: a MIMIC-IV Derived Dataset for Pulse Oximetry Correction Models](https://physionet.org/content/mit-critical-datathon-2023/1.0.0/)
+
+​
+This dataset supports the building of Pulse Oximetry Correction Models. Derived from MIMIC-IV v2.2, it includes 14,404 distinct patients admitted to the Intensive Care Unit (ICU) from 15,923 ICU stays. Paired  measurements are aligned with patient demographics, physiological data, and treatment information. There are 81,797  pairs in total, captured within 90 minutes, where each variable has a time delta relative to the  timestamp.
+
+​More info in the [PhysioNet Project Page](https://physionet.org/content/mit-critical-datathon-2023/1.0.0/).
+
+*Johnson, A.E.W., Bulgarelli, L., Shen, L. et al. MIMIC-IV, a freely accessible electronic health record dataset. Sci Data 10, 1 (2023). https://doi.org/10.1038/s41597-022-01899-x*
+
+### Understand the variables：
+
+The first step is to understand what variables your dataset has and how these variables are distributed. The columns and data types are:
+
+Discuss with your team about the problem and what variables are needed
+
+
+| name                           | type    | description                                                                                                                                       |
+| ------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------- |
+| subject_id                     | int64   | Unique identifier for each patient                                                                                                        |
+| stay_id                        | int64   | Unique identifier for each ward stay                                                                                            |
+| SaO2_timestamp                 | object  | Timestamp for SaO2 measurement                                                                                                        |
+| SaO2                           | float64 | Arterial oxygen saturation                                                                                                                  |
+| delta_SpO2                     | int64   | Time offset (in minutes) in the measurement of peripheral oxygen saturation                                                    |
+| SpO2                           | int64   | Peripheral oxygen saturation                                                                                                                |
+| hidden_hypoxemia               | int64   | Indicates if the patient had hypoxemia without clinical signs                                                                    |
+| hadm_id                        | int64   | Unique identifier for each hospital admission                                                                                           |
+| gender                         | object  | Gender of the patient                                                                                                                         |
+| sex_female                     | int64   | Indicates if the patient is female                                                                                                      |
+| anchor_age                     | int64   | Age of the patient at the time of admission                                                                                                |
+| race                           | object  | Race of the patient                                                                                                                            |
+| race_group                     | object  | Grouping of race into broader categories                                                                                                |
+| language                       | object  | Primary language spoken by the patient                                                                                                     |
+| insurance                      | object  | Type of insurance of the patient                                                                                                   |
+| weight                         | float64 | Weight of the patient in kilograms                                                                                                      |
+| height                         | float64 | Height of the patient in centimeters                                                                                                  |
+| BMI                            | float64 | Body Mass Index of the patient                                                                                                                |
+| anchor_year_group              | object  | Grouping of admission year into broader categories                                                                               |
+| first_hosp_stay                | bool    | Indicates if this is the first hospital stay for the patient                                                                           |
+| first_icu_stay                 | bool    | Indicates if this is the first ICU stay for the patient                                                                            |
+| icustay_seq                    | int64   | Sequence number of ICU stay for the patient                                                                |
+| admittime                      | object  | Timestamp for hospital admission                                                                                                          |
+| dischtime                      | object  | Timestamp for hospital discharge                                                                                                          |
+| icu_intime                     | object  | Timestamp for ICU admission                                                                                                           |
+| icu_outtime                    | object  | Timestamp for ICU discharge                                                                                                            |
+| los_hospital                   | int64   | Length of hospital stay in days                                                                                                             |
+| los_icu                        | float64 | Length of ICU stay in days                                                                                                               |
+| CCI                            | int64   | Charlson Comorbidity Index                                                                                                               |
+| SOFA_admission                 | int64   | Sequential Organ Failure Assessment (SOFA) score at admission                                                                          |
+| mortality_in                   | int64   | Indicates if the patient died during the hospital stay                                                                               |
+| delta_vent_start               | float64 | Time since ventilation started (in minutes) at the time of the measurement                                                    |
+| ventilation_status             | object  | Indicates if the patient was on mechanical ventilation                                                                              |
+| invasive_vent                  | int64   | Indicates if the patient was on invasive mechanical ventilation                                                                   |
+| delta_FiO2                     | float64 | Time offset (in minutes) in the measurement of inspired oxygen (FiO2)                                                      |
+| FiO2                           | float64 | Fraction of inspired oxygen                                                                                                                   |
+| delta_rrt                      | float64 | Time since renal replacement therapy (in minutes) at the time of the measurement                                             |
+| rrt                            | int64   | Indicates if the patient was on renal replacement therapy                                                                         |
+| delta_vp_start                 | float64 | Time since vasopressor therapy started (in minutes) at the time of the measurement                                           |
+| norepinephrine_equivalent_dose | float64 | Dose of norepinephrine equivalent to other vasopressors (in mcg/kg/min)                                    /kg/min）         |
+| delta_sofa_coag                | float64 | Time offset (in minutes) in the measurement of SOFA score for coagulation from the previous measurement              |
+| sofa_coag                      | float64 | SOFA score for coagulation                                                                                                               |
+| delta_sofa_liver               | float64 | Time offset (in minutes) in the measurement of SOFA score for liver from the previous measurement                    |
+| sofa_liver                     | float64 | SOFA score for liver                                                                                                                     |
+| delta_sofa_cv                  | int64   | Time offset (in minutes) in the measurement of SOFA score for cardiovascular from the previous measurement           |
+| sofa_cv                        | int64   | Cardiovascular component of Sequential Organ Failure Assessment (SOFA) score                                                              |
+| delta_sofa_cns                 | float64 | Time offset (in minutes) in the measurement of central nervous system component of SOFA                           |
+| sofa_cns                       | float64 | Central nervous system component of SOFA score                                                                                         |
+| delta_sofa_renal               | float64 | Time offset (in minutes) in the measurement of renal component of SOFA                                              |
+| sofa_renal                     | float64 | Renal component of SOFA score                                                                                                         |
+| delta_sofa_resp                | float64 | Time offset (in minutes) in the measurement of respiratory component of SOFA                                       |
+| sofa_resp                      | float64 | Respiratory component of SOFA score                                                                                                   |
+| delta_hemoglobin               | float64 | Time offset (in minutes) in the measurement of hemoglobin level                                                                 |
+| hemoglobin                     | float64 | Hemoglobin level                                                                                                                             |
+| delta_hematocrit               | float64 | Time offset (in minutes) in the measurement of Change in hematocrit level                                                   |
+| hematocrit                     | float64 | Hematocrit level                                                                                                                            |
+| delta_mch                      | float64 | Time offset (in minutes) in the measurement of mean corpuscular hemoglobin                                             |
+| mch                            | float64 | Mean corpuscular hemoglobin                                                                                                              |
+| delta_mchc                     | float64 | Time offset (in minutes) in the measurement of mean corpuscular hemoglobin concentration                            |
+| mchc                           | float64 | Mean corpuscular hemoglobin concentration                                                                                              |
+| delta_mcv                      | float64 | Time offset (in minutes) in the measurement of mean corpuscular volume                                                     |
+| mcv                            | float64 | Mean corpuscular volume                                                                                                                      |
+| delta_platelet                 | float64 | Time offset (in minutes) in the measurement of platelet count                                                                      |
+| platelet                       | float64 | Platelet count                                                                                                                                 |
+| delta_rbc                      | float64 | Time offset (in minutes) in the measurement of red blood cell count                                                               |
+| rbc                            | float64 | Red blood cell count                                                                                                                      |
+| delta_rdw                      | float64 | Time offset (in minutes) in the measurement of Change in red cell distribution width                                          |
+| rdw                            | float64 | Red cell distribution width                                                                                                                  |
+| delta_wbc                      | float64 | Time offset (in minutes) in the measurement of white blood cell count                                                              |
+| wbc                            | float64 | White blood cell count                                                                                                                          |
+| delta_d_dimer                  | float64 | Time offset (in minutes) in the measurement of Change in D-dimer                                                             |
+| d_dimer                        | float64 | D-dimer level                                                                                                                                |
+| delta_fibrinogen               | float64 | Time offset (in minutes) in the measurement of fibrinogen level                                                                |
+| fibrinogen                     | float64 | Fibrinogen level                                                                                                                            |
+| delta_thrombin                 | float64 | Time offset (in minutes) in the measurement of thrombin time                                                                    |
+| thrombin                       | float64 | Thrombin time                                                                                                                                |
+| delta_inr                      | float64 | Time offset (in minutes) in the measurement of Change in international normalized ratio (INR)                            |
+| inr                            | float64 | International normalized ratio (INR)                                                                                                     |
+| delta_pt                       | float64 | Time offset (in minutes) in the measurement of prothrombin time (PT)                                                      |
+| pt                             | float64 | Prothrombin time (PT)                                                                                                                  |
+| delta_ptt                      | float64 | Time offset (in minutes) in the measurement of partial thromboplastin time (PTT)                                     |
+| ptt                            | float64 | Partial thromboplastin time (PTT)                                                                                                 |
+| delta_alt                      | float64 | Time offset (in minutes) in the measurement of alanine transaminase (ALT) level                                   |
+| alt                            | float64 | Alanine transaminase (ALT) level                                                                                             |
+| delta_alp                      | float64 | Time offset (in minutes) in the measurement of hhange in alkaline phosphatase (ALP) level                           |
+| alp                            | float64 | Alkaline phosphatase (ALP) level                                                                                                  |
+| delta_ast                      | float64 | Time offset (in minutes) in the measurement of aspartate transaminase (AST) level                              |
+| ast                            | float64 | Aspartate transaminase (AST) level                                                                                        |
+| delta_bilirubin_total          | float64 | Time offset (in minutes) in the measurement of total bilirubin level                                                           |
+| bilirubin_total                | float64 | Total bilirubin level                                                                                                                        |
+| delta_bilirubin_direct         | float64 | Time offset (in minutes) in the measurement of direct bilirubin level                                                          |
+| bilirubin_direct               | float64 | Direct bilirubin level                                                                                                                      |
+| delta_bilirubin_indirect       | float64 | Time offset (in minutes) in the measurement of indirect bilirubin level                                                    |
+| bilirubin_indirect             | float64 | Indirect bilirubin level                                                                                                                    |
+| delta_ck_cpk                   | float64 | Time offset (in minutes) in the measurement of creatine kinase (CPK) level                                          |
+| ck_cpk                         | float64 | Creatine kinase (CPK) level                                                                                                        |
+| delta_ck_mb                    | float64 | Time offset (in minutes) in the measurement of creatine kinase MB (CK-MB) level                                |
+| ck_mb                          | float64 | Creatine kinase MB (CK-MB) level                                                                                                |
+| delta_ggt                      | float64 | Time offset (in minutes) in the measurement of gamma-glutamyl transferase (GGT) level                    |
+| ggt                            | float64 | Gamma-glutamyl transferase (GGT) level                                                                                       |
+| delta_ld_ldh                   | float64 | Time offset (in minutes) in the measurement of lactate dehydrogenase (LDH) level                                   |
+| ld_ldh                         | float64 | Lactate dehydrogenase (LDH) level                                                                                                   |
+| delta_albumin                  | float64 | Time offset (in minutes) in the measurement of albumin level                                                                 |
+| albumin                        | float64 | Albumin level                                                                                                                                 |
+| delta_aniongap                 | float64 | Time offset (in minutes) in the measurement of anion gap                                                                   |
+| aniongap                       | float64 | Anion gap                                                                                                                                   |
+| delta_bicarbonate              | float64 | Time offset (in minutes) in the measurement of bicarbonate level                                                              |
+| bicarbonate                    | float64 | Bicarbonate level                                                                                                                              |
+| delta_bun                      | float64 | Time offset (in minutes) in the measurement of blood urea nitrogen (BUN) level                                         |
+| bun                            | float64 | Blood urea nitrogen (BUN) level                                                                                                         |
+| delta_calcium                  | float64 | Time offset (in minutes) in the measurement of calcium level                                                                 |
+| calcium                        | float64 | Calcium level                                                                                                                                 |
+| delta_chloride                 | float64 | Time offset (in minutes) in the measurement of chloride level                                                             |
+| chloride                       | float64 | Chloride level                                                                                                                             |
+| delta_creatinine               | float64 | Time offset (in minutes) in the measurement of creatinine level                                                             |
+| creatinine                     | float64 | Creatinine level                                                                                                                             |
+| delta_glucose_lab              | float64 | Time offset (in minutes) in the measurement of glucose level from laboratory                                               |
+| glucose_lab                    | float64 | Glucose level from laboratory measurement                                                                                                |
+| delta_sodium                   | float64 | Time offset (in minutes) in the measurement of sodium level                                                                  |
+| sodium                         | float64 | Sodium level                                                                                                                                  |
+| delta_potassium                | float64 | Time offset (in minutes) in the measurement of potassium level                                                                |
+| potassium                      | float64 | Potassium level                                                                                                                                |
+| delta_ph                       | float64 | Time offset (in minutes) in the measurement of pH level                                                                          |
+| ph                             | float64 | pH level                                                                                                                                          |
+| delta_lactate                  | float64 | Time offset (in minutes) in the measurement of lactate level                                                                    |
+| lactate                        | float64 | Lactate level                                                                                                                                    |
+| delta_heart_rate               | int64   | Time offset (in minutes) in the measurement of heart rate                                                                       |
+| heart_rate                     | float64 | Heart rate                                                                                                                                       |
+| delta_mbp                      | int64   | Time offset (in minutes) in the measurement of mean blood pressure (MBP)                                                 |
+| mbp                            | float64 | Mean blood pressure (MBP)                                                                                                                 |
+| delta_resp_rate                | float64 | Time offset (in minutes) in the measurement of respiratory rate                                                                 |
+| resp_rate                      | float64 | Respiratory rate                                                                                                                                |
+| delta_temperature              | float64 | Time offset (in minutes) in the measurement of body temperature                                                                  |
+| temperature                    | float64 | Body temperature                                                                                                                                  |
+| delta_glucose                  | float64 | Time offset (in minutes) in the measurement of glucose level                                                                    |
+| glucose                        | float64 | Glucose level                                                                                                                                   |
+| delta_heart_rhythm             | float64 | Time offset (in minutes) in the measurement of heart rhythm                                                                   |
+| heart_rhythm                   | object  | Heart rhythm                                                                                                                                   |
+
+## 5. Data Load
+
+```{r, results = 'FALSE'}
+library(dplyr)
+```
+
+```{r}
+data <- read.csv("../../data/mimic_pulseOx_data.csv")
+# print(head(data,1))
+```
+
+
