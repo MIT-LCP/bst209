@@ -32,7 +32,7 @@ and paste in the link you just copied. Under "Create Project as
 Subdirectory of", browse and select a folder where you want the course
 materials to go.
 
-3. Press "Create Project". This will create a folder called `BST209-2022`
+3. Press "Create Project". This will create a folder called `bst209`
 in the folder you selected in step 2.
 
 4. Now, you can open this project using the projects tab in the upper
@@ -44,7 +44,7 @@ Git Bash), you can associate the directory that was created in that
 step with RStudio. 
 
 In RStudio, go to File > New Project > Existing Directory and click on 
-the BST209-2022 folder.  Then click "Create Project". Then you can follow
+the bst209 folder.  Then click "Create Project". Then you can follow
 step 4 above to open the project when you launch RStudio. 
 
 You can read more about RStudio projects here:
@@ -58,7 +58,7 @@ use `git pull` to get updates.
 
 In RStudio, if you followed the instructions above, simply navigate
 to the Git tab and press the Pull button. In terminal / Git bash, use
-`cd` to navigate to the `BST209-2022` folder, then run `git pull`.
+`cd` to navigate to the `bst209` folder, then run `git pull`.
 
 
 # Taking notes on course materials
