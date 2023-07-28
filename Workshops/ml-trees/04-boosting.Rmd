@@ -1,0 +1,89 @@
+---
+title: "04 - Boosting"
+subtitle: "ML - Trees"
+author: "Lasse Hyldig Hansen"
+date: "2023-06-06"
+output: 
+  html_document:
+    toc: true
+---
+
+## Required Packages
+
+Remember you can install packages with the function:
+
+install.packages("package name")
+
+```{r}
+# Helper packages
+library(dplyr)       # for data wrangling
+library(ggplot2)     # for plotting
+
+# Required Libraries
+library(adabag)
+library(rpart)
+library(rattle)
+library(rpart.plot)
+library(ggplot2)
+
+# Model interpretability packages
+library(rpart.plot)  # for plotting decision trees
+library(vip)         # for feature importance
+```
+
+
+## Boosting
+
+In the previous episode, we demonstrated that decision trees may have high "variance". Their performance can vary widely given different samples of data. An algorithm that performs somewhat poorly at a task - such as simple decision tree - is sometimes referred to as a "weak learner".
+
+The premise of boosting is the combination of many weak learners to form a single "strong" learner. In a nutshell, boosting involves building a models iteratively. At each step we focus on the data on which we performed poorly.
+
+In our context, the first step is to build a tree using the data. Next, we look at the data that we misclassified, and re-weight the data so that we really wanted to classify those observations correctly, at a cost of maybe getting some of the other data wrong this time. Let's see how this works in practice.
+
+```{r}
+# build models with a single split
+tree_control <- rpart.control(maxdepth = 1) # adjust cp as needed
+mdl <- boosting(formula = actualhospitalmortality_enc ~ age + acutephysiologyscore, 
+                data = train_df, 
+                boos = TRUE, 
+                mfinal = 6,
+                trees = tree_control)
+
+```
+
+
+```{r}
+
+# build models with a single split
+tree_control <- rpart.control(maxdepth = 1) # adjust cp as needed
+mdl <- boosting(formula = actualhospitalmortality_enc ~ age + acutephysiologyscore, 
+                data = train_df, 
+                boos = TRUE, 
+                mfinal = 6,
+                trees = tree_control)
+library(ggplot2)
+
+# Generate grid of points
+grid <- expand.grid(age = seq(min(train_df$age), max(train_df$age), length.out = 100),
+                    acutephysiologyscore = seq(min(train_df$acutephysiologyscore), max(train_df$acutephysiologyscore), length.out = 100))
+
+# Predict class label for each point in the grid
+predictions <- predict(mdl, grid, type = "response")
+grid$prediction <- predictions$class
+
+# Create plot
+ggplot(grid, aes(x = age, y = acutephysiologyscore, fill = prediction)) +
+  geom_point() +
+  geom_tile() +
+  #scale_fill_manual(values = c("blue", "red")) +
+  scale_color_manual(values = c("blue", "red")) +
+  labs(title = "Decision Boundary - Ada Boost",
+       x = "Age",
+       y = "Acute physiology score",
+       fill = "Predicted Class") +
+  theme_classic()
+```
+
+
+
+

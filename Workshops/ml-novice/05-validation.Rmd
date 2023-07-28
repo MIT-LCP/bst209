@@ -1,0 +1,188 @@
+---
+title: "Validation"
+teaching: 20
+exercises: 10
+questions:
+- "What is meant by model accuracy?"
+- "What is the purpose of a validation set?"
+- "What are two types of cross validation?"
+- "What is overfitting?"
+objectives:
+- "Train a model to predict patient outcomes on a held-out test set."
+- "Use cross validation as part of our model training process."
+keypoints:
+- "Validation sets are used during model development, allowing models to be tested prior to testing on a held-out set."
+- "Cross-validation is a resampling technique that creates multiple validation sets."
+- "Cross-validation can help to avoid overfitting."
+---
+
+## Accuracy
+
+One measure of the performance of a classification model is accuracy. Accuracy is defined as the overall proportion of correct predictions. If, for example, we take 50 shots and 40 of them hit the target, then our accuracy is 0.8 (40/50).
+
+![Ren Hayakawa Archery Olympics](../fig/japan_ren_hayakawa.jpg){: width="600px"}
+
+Accuracy can therefore be defined by the formula below:
+
+$$ Accuracy = \frac{Correct\ predictions}{All\ predictions}$$
+
+What is the accuracy of our model at predicting in-hospital mortality?
+
+```{r}
+library(tidyverse)
+library(caret)
+library(mlr)
+library(scales)
+
+# load the data
+cohort <- read_csv("../data/eicu_cohort.csv")
+
+# rename columns
+names(cohort)[names(cohort) == "unabridgedhosplos"] <- "length of stay"
+names(cohort)[names(cohort) == "meanbp"] <- "mean blood pressure"
+names(cohort)[names(cohort) == "wbc"] <- "white cell count"
+
+# convert to a categorical type
+categories <- c('ALIVE', 'EXPIRED')
+cohort$actualhospitalmortality <- factor(cohort$actualhospitalmortality, levels = categories)
+
+# add the encoded value to a new column
+cohort$actualhospitalmortality_enc <- as.integer(cohort$actualhospitalmortality) - 1
+
+# convert to a categorical type
+cohort$gender <- factor(cohort$gender)
+cohort$gender <- as.integer(cohort$gender)
+
+# Define features and outcome
+features <- "apachescore"
+outcome <- "actualhospitalmortality_enc"
+
+# Split the data into training and testing sets
+set.seed(42)  # Set random seed for reproducibility
+train_index <- createDataPartition(cohort[[outcome]], p = 0.7, list = FALSE)
+
+x_train <- cohort[train_index, features]
+y_train <- cohort[train_index, outcome]
+x_test <- cohort[-train_index, features]
+y_test <- cohort[-train_index, outcome]
+
+# creating test and train dataframe
+train_df <- cohort[train_index, ]
+test_df <- cohort[-train_index, ]
+
+# ensure that the response variable has the same levels in both sets
+levels(train_df$actualhospitalmortality_enc) <- levels(test_df$actualhospitalmortality_enc)
+
+# fit the model to our training data
+reg <- glm(actualhospitalmortality_enc ~ apachescore, data = train_df, family = binomial())
+
+# print model summary
+summary(reg)
+
+# make predictions on training data
+y_train_pred <- predict(reg, newdata = data.frame(x_train), type = "response")
+
+# make predictions on testing data
+y_test_pred <- predict(reg, newdata = data.frame(x_test), type = "response")
+
+# calculate accuracy on training data
+acc_train <- mean(ifelse(y_train_pred >= 0.5, 1, 0) == y_train)
+print(paste("Accuracy on training set:", acc_train))
+
+# calculate accuracy on testing data
+acc_test <- mean(ifelse(y_test_pred >= 0.5, 1, 0) == y_test)
+print(paste("Accuracy on test set:", acc_test))
+```
+
+```
+Accuracy on training set: 0.92
+Accuracy on test set: 0.93
+```
+{: .output}
+
+Not bad!
+
+## Validation set
+
+Machine learning is iterative by nature. We want to improve our model, tuning and evaluating as we go. This leads us to a problem. Using our test set to iteratively improve our model would be cheating. It is supposed to be "held out", not used for training! So what do we do?
+
+The answer is that we typically partition off part of our training set to use for validation. The "validation set" can be used to iteratively improve our model, allowing us to save our test set for the \*final\* evaluation.
+
+![Validation set](../fig/training_val_set.png){: width="600px"}
+
+## Cross validation
+
+Why stop at one validation set? With sampling, we can create many training sets and many validation sets, each slightly different. We can then average our findings over the partitions to give an estimate of the model's predictive performance
+
+The family of resampling methods used for this is known as "cross validation". It turns out that one major benefit to cross validation is that it helps us to build more robust models. 
+
+If we train our model on a single set of data, the model may learn rules that are overly specific (e.g. "all patients aged 63 years survive"). These rules will not generalise well to unseen data. When this happens, we say our model is "overfitted".
+
+If we train on multiple, subtly-different versions of the data, we can identify rules that are likely to generalise better outside out training set, helping to avoid overfitting.
+
+Two popular of the most popular cross-validation methods:
+- K-fold cross validation
+- Leave-one-out cross validation
+
+## K-fold cross validation
+
+In K-fold cross validation, "K" indicates the number of times we split our data into training/validation sets. With 5-fold cross validation, for example, we create 5 separate training/validation sets.
+
+![5-fold validation](../fig/k_fold_cross_val.png){: width="600px"}
+
+With K-fold cross validation, we select our model to evaluate and then:
+1. Partition the training data into a training set and a validation set. An 80%, 20% split is common.
+2. Fit the model to the training set and make a record of the optimal parameters.
+3. Evaluate performance on the validation set.
+4. Repeat the process 5 times, then average the parameter and performance values.
+
+When creating our training and test sets, we needed to be careful to avoid data leaks. The same applies when creating training and validation sets. We can use a `pipeline` object to help manage this issue.
+
+```{r}
+# perform K-fold cross-validation
+k <- 5  # number of folds
+accuracy <- rep(NA, k)
+
+for (i in 1:k) {
+  # partition the data into training and validation sets
+  folds <- createFolds(cohort$actualhospitalmortality_enc, k = k, list = TRUE)
+  train_indices <- unlist(folds[-i])
+  val_indices <- folds[[i]]
+  
+  train_data <- cohort[train_indices, ]
+  val_data <- cohort[val_indices, ]
+  
+  # fit the model to the training data
+  reg <- glm(actualhospitalmortality_enc ~ apachescore, data = train_data, family = binomial())
+  
+  # make predictions on the validation set
+  y_val_pred <- predict(reg, newdata = val_data, type = "response")
+  
+  # calculate accuracy on the validation set
+  acc_val <- mean(ifelse(y_val_pred >= 0.5, 1, 0) == val_data$actualhospitalmortality_enc)
+  accuracy[i] <- acc_val
+}
+
+
+# calculate average accuracy across folds
+mean_accuracy <- mean(accuracy)
+std_accuracy <- sd(accuracy)
+
+# print the average accuracy
+print(paste("Average accuracy:", percent(mean_accuracy), "SD:", round(std_accuracy, digits = 2)))
+```
+
+```
+Cross-validation accuracy, mean (sd: 0.024): 92%
+```
+{: .output}
+
+Leave-one-out cross validation is the same idea, except that we have many more folds. In fact, we have one fold for each data point. Each fold we leave out one data point for validation and use all of the other points for training.
+
+{% include links.md %}
+
+
+
+
+
+

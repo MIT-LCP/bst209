@@ -1,0 +1,73 @@
+---
+title: "08 Performance"
+subtitle: "ML - Trees"
+author: "Lasse Hyldig Hansen"
+date: "2023-06-06"
+output: 
+  html_document:
+    toc: true
+---
+
+## packages
+
+```{r}
+# Load necessary libraries
+library(rpart)
+library(adabag)
+library(gbm)
+library(ipred)
+library(pROC)
+
+```
+
+## Comparing model performance
+We’ve now learned the basics of the various tree methods and have visualized most of them. Let’s finish by comparing the performance of our models on our held-out test data. Our goal, remember, is to predict whether or not a patient will survive their hospital stay using the patient’s age and acute physiology score computed on the first day of their ICU stay.
+
+```{r}
+# Create an empty list to store models
+clf <- list()
+
+# Train the Decision Tree model
+clf[['Decision Tree']] <- rpart(actualhospitalmortality_enc ~ age + acutephysiologyscore, data = train_df, method = "class")
+
+# Train the AdaBoost model
+clf[['AdaBoost']] <- boosting(formula = actualhospitalmortality_enc ~ age + acutephysiologyscore, 
+                data = train_df, 
+                boos = TRUE, 
+                mfinal = 6)
+
+# Train the Gradient Boosting model
+clf[['Gradient Boosting']] <- gbm(formula = as.factor(actualhospitalmortality_enc) ~ age + acutephysiologyscore, 
+           distribution = "bernoulli", 
+           data = train_df, 
+           n.trees = 15)
+
+# Train the Random Forest model
+clf[['Random Forest']] <- randomForest(actualhospitalmortality_enc ~ age + acutephysiologyscore, data = train_df, ntree = 10)
+
+# Train the Bagging model
+clf[['Bagging']] <- bagging(actualhospitalmortality_enc ~ age + acutephysiologyscore, data = train_df, nbagg = 10)
+
+
+## THIS NEEDS TO BE REVISED!
+
+# Print AUROC for each model
+for(curr_mdl in names(clf)) {
+  # Make predictions on test data
+  if (curr_mdl == 'AdaBoost') {
+    yhat <- predict(clf[[curr_mdl]], newdata = test_df, type = 'response')$prob[,2]
+  } else if (curr_mdl == 'Gradient Boosting') {
+    yhat <- predict.gbm(clf[[curr_mdl]], newdata = test_df, n.trees = 15, type = 'response')
+  } else {
+    yhat <- predict(clf[[curr_mdl]], newdata = test_df, type = 'prob')[,2]
+  }
+  
+  # Calculate AUROC
+  roc_obj <- roc(test_df$actualhospitalmortality_enc, yhat)
+  score <- auc(roc_obj)
+  
+  # Print AUROC score
+  cat(sprintf('AUROC for %s: %f\n', curr_mdl, score))
+}
+```
+
