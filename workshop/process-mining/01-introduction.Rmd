@@ -2,7 +2,7 @@
 title: "01 - Introduction"
 subtitle: "Process Mining"
 author: "Jan Niklas Adams"
-date: "2023-07-12"
+date: "2023-08-10"
 questions:
 - "What are the limitations of traditional tabular data?"
 - "How can they be mitigated through the event log format?"
@@ -22,7 +22,7 @@ output:
 
 ## Limitations of Tabular Data
 
-So far, we have looked at data through a tabular lens: Every single data point represents one patient and all the information about the patient should be contained in that single data point. However, patient data is often composed of different treatments at different points in time. Not incorporating this leads to loss of contextual information and timing information.
+So far, we have looked at data through a tabular lens: Every single data point represents one patient and all the information about the patient should be contained in that single data point. However, patient data is often composed of different treatments at different points in time. Not incorporating this leads to a loss of contextual information and timing information.
 
 Let's say we have the following data about patients:
 
@@ -32,7 +32,7 @@ Let's say we have the following data about patients:
 | 134        | 34mg               | Y                | 4    |
 | 152        | 21mg               | Z                | 2    |
 
-Now we would like to incorporate more data to get a more wholesome view of the treatment. First, we want to add other parts of the treatment. Second, we would like to track multiplicities of the same treatment. Third, we would like to express timely orders between treatments. We will show the issues of tabular data with incorporating such fundamental information.
+Now we would like to incorporate more data to get a more wholesome view of the treatment. First, we want to add other parts of the treatment. Second, we would like to track multiplicities of the same treatment. Third, we would like to express timely orders between treatments. We will show the issues of tabular data by incorporating such fundamental information.
 
 ### Incorporating different treatments
 
@@ -86,7 +86,7 @@ We need to store the data in a different format to efficiently incorporate infor
 
 ## The Event Log
 
-We address these limitations of traditional tabular data by using an event log. An event log consists of events. Each event is associated to a case identifier, e.g., a patients, an undertaken activity, e.g., a treatment action, a timestamp, e.g., the time of treatment, and additional data specific to that activity.
+We address these limitations of traditional tabular data by using an event log. An event log consists of events. Each event is associated with a case identifier, e.g., a patient, an undertaken activity, e.g., a treatment action, a timestamp, e.g., the time of treatment, and additional data specific to that activity.
 
 Example of an event:
 
@@ -97,14 +97,14 @@ Example of an event:
 We group all events of the same case identifier to form the case, i.e., the sequence of events.
 
 | Case     | Activity    | Timestamp | Vent. Dur. | Tube Size | AB Amount | AB Type | SOFA |
-|---------|---------|---------|---------|---------|---------|---------|---------|
+|--------|---------|-----------|---------|---------|----------|--------|--------|
 | Pat. 132 | Ventilation | 8pm       | 5h         | 2         | \-        | \-      | \-   |
 | Pat. 132 | Antibiotics | 10pm      | \-         | \-        | 20mg      | X       | 3    |
 
 And all cases together form the event log.
 
 | Case     | Activity    | Timestamp | Vent. Dur. | Tube Size | AB Amount | AB Type | SOFA |
-|---------|---------|---------|---------|---------|---------|---------|---------|
+|---------|---------|----------|---------|---------|-----------|---------|-------|
 | Pat. 132 | Ventilation | 8pm       | 5h         | 2         | \-        | \-      | \-   |
 | Pat. 132 | Antibiotics | 10pm      | \-         | \-        | 20mg      | X       | 3    |
 | Pat. 134 | Antibiotics | 8am       | \-         | \-        | 20mg      | Y       | 4    |

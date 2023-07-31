@@ -2,7 +2,7 @@
 title: "03 - Variant Analysis and Discovery"
 subtitle: "Process Mining"
 author: "Jan Niklas Adams"
-date: "2023-07-12"
+date: "2023-08-10"
 questions:
 - "How can we get an overview of possible paths through the (treatment) process?"
 - "How do we interpret variant explorers for our analysis?"
@@ -119,4 +119,4 @@ log %>%
   process_map()
 ```
 
-The treatment process of the patients with a suspected infection exhibits much more complexity. This also showcases the limitations of process maps when analyzing treatment flows: With complex processes and many activities, the models quickly become incomprehensible to the human eye.
+The treatment process of patients with a suspected infection exhibits much more complexity. This also showcases the limitations of process maps when analyzing treatment flows: With complex processes and many activities, the models quickly become incomprehensible to the human eye.

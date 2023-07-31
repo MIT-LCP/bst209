@@ -1,7 +1,7 @@
 ---
 title: "04-Outlook"
 author: "Jan Niklas Adams"
-date: "2023-07-20"
+date: "2023-08-10"
 questions:
 - "What are examples of conformance checking?"
 - "How to conduct performance analysis?"
@@ -126,7 +126,7 @@ log %>%
 
 ## Operational Support
 
-We want to show an example of how to employ machine learning on event logs here. We want to predict the next things that will happen to a patient based on the things that have happened so far. This is caled next activity prediction. We will use a simple logistic regression.
+We want to show an example of how to employ machine learning on event logs here. We want to predict the next things that will happen to a patient based on the things that have happened so far. This is called next-activity prediction. We will use a simple logistic regression.
 
 ```{r}
 library(processpredictR)
@@ -217,7 +217,7 @@ pred_class <- predict(fit, newdata = test_set)
 cm <- confusionMatrix(as.factor(pred_class), as.factor(test_set$next_activity))
 ```
 
-We can visulize the confusion matrix to investigate the performance of the model. Based on the previous activities and their order, the regression can derive some knowledge about the next activity. This could probably be improved by incorporating more data into the model or by making the model more complex.
+We can visualize the confusion matrix to investigate the performance of the model. Based on the previous activities and their order, the regression can derive some knowledge about the next activity. This could probably be improved by incorporating more data into the model or by making the model more complex.
 
 ```{r}
 # visualize confusion matrix
