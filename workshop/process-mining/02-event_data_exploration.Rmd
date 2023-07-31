@@ -2,7 +2,7 @@
 title: "02 - Event Data Exploration"
 subtitle: "Process Mining"
 author: "Jan Niklas Adams"
-date: "2023-07-12"
+date: "2023-08-10"
 questions:
 - "How to load event data in R?"
 - "What specialized ways of exploratory data analysis are available for event data?"
@@ -68,7 +68,7 @@ As with any other data, we would like to manipulate event logs with basic operat
 
 We can filter the cases based on their attributes, e.g., end-to-end treatment time or activity presence.
 
-For example, based on the event log we know, that there is the age of the patient recorded at every event. We can filter our the events where patients where below 60.
+For example, based on the event log we know, that there is the age of the patient recorded at every event. We can filter out the events where patients were below 60.
 
 ```{r}
 log %>%
@@ -94,7 +94,7 @@ log %>%
 
 ## Event Log Exploration
 
-To get an overview of the whole event log, we can summarize all treatments undertaken for all patients in one graph. By drawing each event as a colored dot according to the undertaken treatment, placing it according to time on the x-axis and according to patient on the y-axis, we can investigate dynamics of the overall process.
+To get an overview of the whole event log, we can summarize all treatments undertaken for all patients in one graph. By drawing each event as a colored dot according to the undertaken treatment, placing it according to time on the x-axis and according to patients on the y-axis, we can investigate the dynamics of the overall process.
 
 ```{r}
 log %>%
