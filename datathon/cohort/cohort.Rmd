@@ -32,7 +32,7 @@ editor_options:
 
 
 ## 0. Understand the Problem and Dataset
-Please go through [Workshop 0](https://colab.research.google.com/gist/joamats/6838b5329b538e066c9de4468d3ee77b/mit-critical-data-workshop-0.ipynb) for an Introduction on the Problem, Dataset and Objective of the Datathon.
+Please go through [Workshop 0](https://github.com/MIT-LCP/bst209/blob/main/datathon/introduction/introduction.html) for an Introduction on the Problem, Dataset and Objective of the Datathon.
 
 
 ## 1. Inclusion/Exclusion Criteria Definition
