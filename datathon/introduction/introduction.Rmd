@@ -28,7 +28,7 @@ That being said, the overarching objectives of the workshop, designed in the for
 * Familiarize clinicians with the applications of data science in the realm of medical research.
 * Acquaint data scientists with real-world medical data, mainly sourced from Electronic Health Records (EHR).
 * Foster collaboration between clinicians and data scientists to ensure a comprehensive understanding of the research question, the data at hand, the variables involved, and to identify clinically relevant machine learning approaches.
-* Equip clinicians with the ability to translate their research questions and hypotheses into data science language, introduce them to tools like Python, Pandas, Machine Learning, and notebooks in Google Colab.
+* Equip clinicians with the ability to translate their research questions and hypotheses into data science language, introduce them to tools like Machine Learning, R, R Markdown, and RStudio.
 * Enable clinicians to independently formulate viable Machine Learning pipelines for their future questions and problems based on the given resources.
 * Emphasize that the goal is to stimulate discussion rather than find right or wrong answers to the questions presented, highlighting the importance of balancing trade-offs in real-world problems and the necessity of involving both parties in the process.
 * Promote the notion of medical data science as a team science, emphasizing the importance of effective communication between data scientists and clinicians. This includes fostering the ability for data scientists to communicate their findings to clinicians and similarly, for clinicians to express their needs and questions effectively to data scientists.
