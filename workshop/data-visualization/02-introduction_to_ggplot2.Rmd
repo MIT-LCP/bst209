@@ -1,0 +1,332 @@
+---
+title: "02 - A First Introduction to ggplot2"
+author: "Renata Prôa"
+date: "2023-07-19"
+output:
+  pdf_document:
+    toc: yes
+  html_document:
+    toc: yes
+questions:
+- "What are the steps to make a plot using ggplot2?"
+- "How can I adjust the aspects of my plot?"
+objectives:
+- "Understand the basics of ggplot2."
+- "Learn the components of a graph."
+- "Learn the sythax to adjust the details of a plot."
+keypoints:
+- "In ggplot we create graphs by adding layers."
+- "Graphs in ggplot2 have three main components: data, geometry and aesthetic mapping."
+- "Additional aspects such as titles, legends, styles and colors can be speficified through specific synthax."
+
+subtitle: Data Visualization
+---
+
+# A First Introduction to ggplot2
+
+Now that we know the importance of data visualization, we are ready to learn how to create the plot that we showed part by part. We will be using the [`ggplot2`](http://ggplot2.org) package. We can load it, along with `dplyr`, as part of the tidyverse:
+
+```{r, message=FALSE}
+library(tidyverse)
+```
+
+One reason `ggplot2` is generally more intuitive for beginners is that it uses a *grammar of graphics*, the *gg* in `ggplot2`. This is analogous to the way learning grammar can help a beginner construct hundreds of different sentences by learning just a a handful of verbs, nouns and adjectives without having to memorize each specific sentence. Similarly, by learning a handful of `ggplot2` building blocks and its grammar, you will be able to create hundreds of different plots.
+
+Another reason `ggplot2` makes it easier for beginners is that its default behavior is carefully chosen to satisfy the great majority of cases and are aesthetically pleasing. As a result, it is possible to create informative and elegant graphs with relatively simple and readable code.
+
+One limitation is that ggplot is designed to work exclusively with data tables in which rows are observations and columns are variables. However, a substantial percentage of datasets that beginners work with are, or can be converted into, this format. An advantage of this approach is that assuming that our data follows this format simplifies the code and learning the grammar.
+
+To use `ggplot2` you will have to learn several functions and arguments. These are hard to memorize so we highly recommend you have the a [ggplot2 cheat sheet](https://www.rstudio.com/resources/cheatsheets/) handy.
+
+### The components of a graph
+
+The first step in learning `ggplot2` is to be able to break a graph apart into components. Let's break down this plot and introduce some of the `ggplot2` terminology. The three main components to note are:
+
+1.  **Data**: The eICU demo data table is being summarized. We refer to this as the **data** component.
+2.  **Geometry**: The plot above is a scatter plot. This is referred to as the **geometry** component. Other possible geometries are barplots, histograms, smooth densities, qqplots, and boxplots.
+3.  **Aesthetic mapping**: The x-axis values are used to display the patients' age, the y-axis values are used to display the Apache score, shapes are being used to identify the patients that actually died in the hospital, and colors are used to show the gender. These are the **aesthetic mappings** component. How we define the mapping depends on what **geometry** we are using.
+
+We also note that:
+
+4.  The range of the x-axis and y-axis appears to be defined by the range of the data. We refer to this as the **scale** component.
+5.  There are labels, a title, a legend, and we use the style of The Economist magazine for this particular plot.
+
+We will now construct the plot piece by piece.
+
+### Loading the data
+
+In order to be able to visualize our data, the first thing we need to do is, obviously, load our data!
+
+```{r, message=FALSE}
+cohort <- read_csv("../data/eicu_cohort.csv")
+```
+
+### Creating a blank slate `ggplot` object
+
+The first step in creating a `ggplot2` graph is to define a `ggplot` object. We do this with the function `ggplot` which initializes the graph. If we read the help file for this function we see that the first argument is used to specify which data is associated with this object:
+
+```{r ggplot-example-1, eval=FALSE}
+ggplot(data = cohort)
+```
+
+We can also pipe the data. So this line of code is equivalent to the one above:
+
+```{r ggplot-example-2}
+cohort %>% ggplot()
+```
+
+What has happened above is that the object was created and because it was not assigned, it was automatically evaluated. But note that we can define an object, for example like this:
+
+```{r}
+p <- ggplot(data = cohort)
+class(p)
+```
+
+To render the plot associated with this object we simply print the object `p`. The following two lines of code produce the same plot we see above:
+
+```{r, eval=FALSE}
+print(p)
+p
+```
+
+In ggplot we create graphs by adding *layers*. Layers can define geometries, compute summary statistics, define what scales to use, or even change styles. To add layers, we use the the symbol `+`. In general a line of code will look like this:
+
+> > DATA %\>% `ggplot()` + LAYER 1 + LAYER 2 + ... + LAYER N
+
+Usually, the first added layer defines the geometry. We want to make a scatter plot. So what geometry do we use?
+
+#### Geometry
+
+Taking a quick look at the cheat sheet we see that the function used to create plots with this geometry is `geom_point`.
+
+We will see that geometry function names follow this pattern: `geom` and the name of the geometry connected by an underscore. For `geom_point` to know what to do, we need to provide data and a mapping. We have already connected the object `p` with the `cohort` data table and if we add as a layer `geom_point` we will default to using this data. To find out what mappings are expected we read the **Aesthetics** section of the `geom_point` help file:
+
+> Aesthetics
+>
+> geom_point understands the following aesthetics:
+>
+> x
+>
+> y
+>
+> alpha
+>
+> color
+
+and, as expected, we see that at least two arguments are required: `x` and `y`.
+
+### `aes`
+
+`aes` will be one of the functions that you will most use. The function connects data with what we see on the graph. We refer to this connection as the **aesthetic mappings**. The outcome of this function is often used as the argument of a geometry function. This example produces a scatter plot of total murders versus population in millions:
+
+```{r, eval = FALSE}
+cohort %>%  ggplot() + geom_point(aes(x = age, y = apachescore))
+```
+
+We got something! But the age values don't look good. Differently from the APACHE score values on the y axis, we have all individual values specified. This is happening because the age information is encoded at character and not numerical data, and therefore is being interpreted by `ggplot2` as a categorical variable. Check it:
+
+```{r}
+class(cohort$age)
+```
+
+To fix this, we can use the function `mutate()` and specify that we want the age variables to be numerical values.
+
+```{r}
+cohort <- cohort %>% mutate(age = as.integer(age))
+```
+
+Notice that we got a message saying that "NAs" were inserted by coercion, meaning that probably it couldn't interpret some characters as numbers. Let's check what are the values that the variable `age` contains:
+
+```{r, message=FALSE}
+# reload the data to get original values
+cohort <- read_csv("../data/eicu_cohort.csv") 
+print(unique(cohort$age))
+```
+
+Pay attention to the value "\> 89". This cannot be interpreted as a number. In the eICU Research Database, ages over 89 years are recorded as "\> 89" to comply with US data privacy laws. For simplicity, we will assign an age of 91.5 years to these patients (this is the approximate average age of patients over 89 in the dataset).
+
+```{r, message=FALSE}
+cohort <- cohort %>%
+  mutate(age = as.integer(age)) %>%
+  mutate(age = if_else(is.na(age), 91.5, age)) # Replace NAs with 91.5 
+```
+
+Now let's try to plot the data again.
+
+```{r, message=FALSE}
+cohort %>% ggplot() + geom_point(aes(x = age, y = apachescore))
+```
+
+Also note that we can add a layer to the `p` object that was defined above as `p <- ggplot(data = cohort)`. However, we must redefine `p` as we changed our data and in the cell above and `p` received the data before we change the age values to numeric.
+
+```{r}
+p <- ggplot(data = cohort) 
+p + geom_point(aes(age, apachescore))
+```
+
+Also notice that we use the variable names from the object component: `age` and `apachescore`. Keep in mind that the behavior of recognizing the variables from the data component is quite specific to `aes`. With most functions, if you try to access the values of `age` or `apachescore` outside of `aes` you receive an error.
+
+#### Categories as colors
+
+Note that we can change the color of the points using the `color` argument in the `geom_point` function. We can make all the points blue by adding the `color` argument, change their `size` and `shape`! You can check the code number for shapes [here](http://www.sthda.com/english/wiki/ggplot2-point-shapes).
+
+```{r}
+p + geom_point(aes(age, apachescore), color = "blue", size = 3, shape = 17)
+
+```
+
+This, of course, is not what we want. We want to assign color depending on the geographical region. A nice default behavior of `ggplot2` is that if we assign a categorical variable to color, it automatically assigns a different color to each category. It also adds a legend!
+
+To map each point to a color, we need to use `aes` since this is a mapping. So we use the following code:
+
+```{r}
+p + geom_point(aes(age, apachescore, color = gender))
+```
+
+Here we see yet another useful default behavior: `ggplot2` has automatically added a legend that maps color to gender. Similarly, we can use the shape of the data points to indicate whether the patient died or no in the hospital.
+
+```{r}
+p + geom_point(aes(age, apachescore, color = gender, shape = actualhospitalmortality))
+```
+
+The default shapes are not very easy to distinguish visually in our plot. We can specify the shapes we want using `scale_shape_manual()`. (to do ref)
+
+```{r}
+p + geom_point(aes(age, apachescore, color = gender, shape = actualhospitalmortality)) +
+  scale_shape_manual(values=c(16, 3), labels = c("Alive", "Expired"), name = 'Hospital Mortality')
+```
+
+We also changed the label names so they look prettier. We can do the same with the color aspect `using scale_color_manual()`. Don't forget to always add a `+` when adding a new layer to your plot.
+
+```{r}
+p + geom_point(aes(age, apachescore, color = gender, shape = actualhospitalmortality)) +
+  scale_shape_manual(values=c(16, 3), labels = c("Alive", "Expired"), name = 'Hospital Mortality') +
+  scale_color_manual(values = c("lightcoral", "mediumseagreen", "grey"), 
+                     labels = c("Female", "Male", "Unknown"), name = "Gender")
+```
+
+#### Adding other layers
+
+We want to a a line the represents the average APACHE Score by age. To do that, we must first calculate the mean value of the APACHE Score for each age value (once the values we gave are discrete), which we can achieve by using the function `aggregate`. This function allows us to get the summary statistics of the data by group. The statistics include mean, min, sum. max etc.
+
+```{r}
+mean_apache_by_age <- aggregate (apachescore ~ age, data = cohort, FUN = mean)
+print(mean_apache_by_age)
+```
+
+Note that `apachescore ~ age` is a way in R to specify a formula for a statistical model, the `~` symbol is used to separate the dependent variable (`apachescore`) from the independent variable (age). In this case we need to specify the data and also the statistical function we want, in this case "mean". Another way to pass the arguments to the aggregate function would be:
+
+```{r}
+mean_apache_by_age <- aggregate (cohort$apachescore, by=list(cohort$age), FUN = mean)
+print(mean_apache_by_age)
+```
+
+But the variables names got lost! So we need to fix it.
+
+```{r}
+mean_apache_by_age <- aggregate (cohort$apachescore, by=list(cohort$age), FUN = mean)
+names(mean_apache_by_age)[names(mean_apache_by_age) == "Group.1"] <- "age"
+names(mean_apache_by_age)[names(mean_apache_by_age) == "x"] <- "apachescore"
+print(mean_apache_by_age)
+```
+
+So now that we have the mean values for the APACHE score, by age lest plot it!
+
+```{r}
+ggplot(mean_apache_by_age) +
+  geom_line(aes(x = age, y = apachescore))
+```
+
+That's not quite what we wanted. Why? Here we used the geometry `geom_line()` that draws a line across the data points of our dataset. But remember that we have discrete values for age, and also, the data is noisy and we don't have that many data points to actually get a smooth line as we wanted. A way around this is to use another geometry: `geom_smooth()`.
+
+```{r, message=FALSE}
+ggplot(mean_apache_by_age) +
+  geom_smooth(aes(x = age, y = apachescore))
+```
+
+Now it looks like what wanted! The `geom_smooth()` fits a trend line in a our data using local regression. By default it adds this dark grey shadowed area indicating the confidence interval (0.95 by default). You can play around and change the settings!
+
+Now we just need to add this plot to our original plot:
+
+```{r, message=FALSE}
+p + geom_point(aes(age, apachescore, color = gender, shape = actualhospitalmortality)) +
+  scale_shape_manual(values=c(16, 3), labels = c("Alive", "Expired"), name = 'Hospital Mortality') +
+  scale_color_manual(values = c("lightcoral", "mediumseagreen", "grey"), 
+                     labels = c("Female", "Male", "Unknown"), name = "Gender") +
+  geom_smooth(data = mean_apache_by_age, aes(x = age, y = apachescore))
+  
+```
+
+Note that we didn't have to create another `ggplot()` object, but we did have to specify in the new layer that we are using a different data.
+
+### Labels and Titles
+
+Now that we've got all the data, we can change labels and add a title we use the following functions: `xlab`, `ylab` and `ggtitle`.
+
+```{r, message=FALSE}
+p + geom_point(aes(age, apachescore, color = gender, shape = actualhospitalmortality)) +
+  scale_shape_manual(values=c(16, 3), labels = c("Alive", "Expired"), name = 'Hospital Mortality') +
+  scale_color_manual(values = c("lightcoral", "mediumseagreen", "grey"), 
+                     labels = c("Female", "Male", "Unknown"), name = "Gender") +
+  geom_smooth(data = mean_apache_by_age, aes(x = age, y = apachescore)) + 
+  xlab("Age") + 
+  ylab("APACHE Score") +
+  ggtitle("APACHE Score in the eICU Demo data")
+  
+```
+
+We are still missing a legend for the mean Apache Score trend line. We can do that by defining a `linetype` in the geometry and using `scale_linetype_manual()`.
+
+```{r, message=FALSE}
+p + geom_point(aes(age, apachescore, color = gender, shape = actualhospitalmortality)) +
+  scale_shape_manual(values=c(16, 3), labels = c("Alive", "Expired"), name = 'Hospital Mortality') +
+  scale_color_manual(values = c("lightcoral", "mediumseagreen", "grey"), 
+                     labels = c("Female", "Male", "Unknown"), name = "Gender") +
+  geom_smooth(data = mean_apache_by_age, aes(x = age, y = apachescore, linetype = "Mean APACHE Score")) + 
+  scale_linetype_manual(values = "solid", name = "") +
+  xlab("Age") + 
+  ylab("APACHE Score") +
+  ggtitle("APACHE Score in the eICU Demo Data")
+  
+```
+
+### Styles and Adjusting
+
+Finally we can add a theme style to our plot. We used the `theme_economist()` from the Economist magazine.
+
+```{r, message=FALSE}
+p + geom_point(aes(age, apachescore, color = gender, shape = actualhospitalmortality)) +
+  scale_shape_manual(values=c(16, 3), labels = c("Alive", "Expired"), name = 'Hospital Mortality') +
+  scale_color_manual(values = c("lightcoral", "mediumseagreen", "grey"), 
+                     labels = c("Female", "Male", "Unknown"), name = "Gender") +
+  geom_smooth(data = mean_apache_by_age, aes(x = age, y = apachescore, linetype = "Mean APACHE Score")) + 
+  scale_linetype_manual(values = "solid", name = "") +
+  xlab("Age") + 
+  ylab("APACHE Score") +
+  ggtitle("APACHE Score in the eICU Demo Data") +
+  theme_economist()
+  
+```
+
+Changing the theme bungled our legend, so we nee to adjust it. We do that by using the function `theme()` and setting the legend parameters.
+
+```{r, message=FALSE}
+p + geom_point(aes(age, apachescore, color = gender, shape = actualhospitalmortality)) +
+  scale_shape_manual(values=c(16, 3), labels = c("Alive", "Expired"), name = 'Hospital Mortality') +
+  scale_color_manual(values = c("lightcoral", "mediumseagreen", "grey"), 
+                     labels = c("Female", "Male", "Unknown"), name = "Gender") +
+  geom_smooth(data = mean_apache_by_age, aes(x = age, y = apachescore, linetype = "Mean APACHE Score")) + 
+  scale_linetype_manual(values = "solid", name = "") +
+  xlab("Age") + 
+  ylab("APACHE Score") +
+  ggtitle("APACHE Score in the eICU Demo Data") +
+  
+  theme_economist() +
+  theme(legend.title = element_text(size = 10, face = "bold"), 
+        legend.text = element_text(size = 8),
+        legend.spacing = unit(-0.1, "cm"),
+        legend.key.size = unit(0.3, "cm"))
+  
+```
+
+Now that we've learned the process and the steps for making a plot with `ggplot2` we can use it to better explore the data! As an exercise you can try to change the variables in this graph and see how it looks like. For example, you can change the APACHE score to the Acute Physiology Score.

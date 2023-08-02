@@ -1,0 +1,322 @@
+---
+title: "03 - Variables' Distributions"
+subtitle: "Data Visualization"
+author: "Renata Prôa"
+date: "2023-07-19"
+
+objectives:
+- "Check the distribution of the variables in the dataset".
+- "Learn how to spot and differentiate missing data and incorrect data."
+
+keypoints:
+- "Histograms are very useful for a first inspection on data distribution."
+- "When dealing with categorical data we must use bar plots intead of histograms as geometry."
+- "We must be aware of which groups of patients are being affected by missing or incorrect data".
+- "When deciding how to approach missing/incorrect data we must carefully consider the implications of the data transformation on the analysis to be conducted on a case by case manner".
+
+output: 
+  html_document:
+    toc: true
+---
+
+# Looking at the Distribution of the Variables
+
+As we mentioned before, our dataset is one with many variables and it is normally not possible to visualize them all at once. In this case, it is part of the data inspection process to visualize all the variables individually.
+
+One of the first things that we need to check is the distribution of the data. One of the most useful types of plots to check the distribution of a variable is the histogram. To make a histogram using `ggplot2` we use `geom_histogram()` to specify that the geometry that we want is a histogram. We also need to specify the variable that we want using the `aes()` function. In a histogram, normally the values of the variable of interest are on the x-axis and the y-axis reflects the frequency of the values.
+
+#### Load and Prepare Data
+
+First, let's load our data again.
+
+```{r, message=FALSE, warning = FALSE}
+cohort <- read_csv("../data/eicu_cohort.csv")
+# Fix age values
+cohort <- cohort %>%
+  mutate(age = as.integer(age)) %>%
+  mutate(age = if_else(is.na(age), 91.5, age)) # Replace NAs with 91.5 
+```
+
+For the sake of clarity, let's also rename the columns.
+
+```{r}
+names(cohort)[names(cohort) == "unabridgedhosplos"] <- "length_of_stay"
+names(cohort)[names(cohort) == "meanbp"] <- "mean_blood_pressure"
+names(cohort)[names(cohort) == "wbc"] <- "white_cell_count"
+```
+
+#### Age
+
+Now we can plot the histogram with the age values distribution.
+
+```{r, message=FALSE}
+ggplot(data = cohort) +
+geom_histogram(aes(x = age))
+```
+
+Note that we don't need to specify in this case that y-axis will reflect the value counts, it is already implicit. In the case of continuous variables, to make a histogram, we need to 'bin' the values. We can regulate the bin size with the parameter `binwidth`.
+
+```{r}
+ggplot(data = cohort) +
+geom_histogram(aes(x = age), binwidth = 5, fill = "skyblue", color = "darkblue") +
+labs(title = "Age Distribution", x = "Age", y = "Frequency")
+```
+
+Notice how we also changed the colors, title and labels. Let's make histograms for the other variables in the dataset.
+
+#### Gender
+
+```{r}
+ggplot(data = cohort) +
+geom_histogram(aes(x = gender)) +
+labs(title = "Gender", x = "Age", y = "Frequency")
+```
+
+Notice that when we try plotting a histogram for gender, it raises an error. That is because `geom_histogram()` is designed to work with continuous numeric variables. If we want to check the distribution of categorical variables, we can use `geom_bar()`.
+
+```{r}
+ggplot(data = cohort) +
+geom_bar(aes(x = gender), fill = 'darkblue') +
+labs(title = "Gender Distribution", x = "Gender", y = "Frequency")
+```
+
+#### Actual Hospital Mortality
+
+```{r}
+ggplot(data = cohort) +
+geom_bar(aes(x = actualhospitalmortality), fill = 'darkgrey') +
+labs(title = "Actual Hospital Mortality Proportion", 
+     x = "Outcome", y = "Frequency")
+```
+
+***Hint:*** we can make one single figure containing those two plots by using the `grid.arrange()` function from the `gridExtra` package to make subplots.
+
+```{r}
+library(gridExtra)
+
+p1 <- ggplot(data = cohort) +
+      geom_bar(aes(x = gender), fill = 'darkblue') +
+      labs(title = "Gender Distribution", x = "Gender", y = "Frequency") +
+      theme(plot.title = element_text(size = 11))
+
+p2 <- ggplot(data = cohort) +
+      geom_bar(aes(x = actualhospitalmortality), fill = 'darkgrey') +
+      labs(title = "Actual Hospital Mortality Proportion", 
+           x = "Outcome", y = "Frequency") +
+      theme(plot.title = element_text(size = 11))
+
+grid.arrange(p1, p2, ncol = 2)
+```
+
+We adjusted the size of the title also so it fist the picture.
+
+#### Admission Height
+
+```{r}
+ggplot(data = cohort) +
+geom_histogram(aes(x = admissionheight), fill = "darkgreen") +
+labs(title = "Admission Height Distribution", x = "Height", y = "Frequency")
+```
+
+We can notice two import things from rendering this plot. First, the Warning message that tells us that 8 rows were found containing non-finite values. Second, the outlier values that we easily spot in the plot. We wouldn't be able to see those so fast just by looking at the tabular data. Hence the importance of checking the distribution of the data.
+
+It is important to differentiate what are actual real outliers on the distribution (values that are distant from the main distribution but are real measurements from a patient) from what are incorrectly entered values or missing data. Visually we see three outliers: one at 0, another one around 70 and a third one at 300. We know from logic that no patient has zero height and from a quick search that tallest man alive as of today is around 250cm tall. Therefore, those two values are miss-entered data, and need be corrected. The other one though, despite being an outlier is perfectly reasonable once it could be the data from a child or a subject with dwarfism, for example.
+
+```{r}
+selected_rows <- subset(cohort, admissionheight >= 50 & admissionheight <= 100)
+print(selected_rows)
+```
+
+A way to deal with incorrectly inputted or missing data is by replacing those with the mean or median. The correct solution for dealing with missing data depends on on many factors, like the type of modeling you will be using and the amount of data missing. Here, we are not taking in consideration any modelling strategy, so naively we will replace the missing data with the median.
+
+*Obs:* a way to improve this for example would be to substitute the height not by the total median, but buy the median height of the patients' gender.
+
+```{r}
+selected_rows <- subset(cohort, admissionheight >= 250 | admissionheight <= 5)
+print(selected_rows)
+```
+
+Looking at the data we can imagine that what happened in the second case is that the measurement was entered in meters instead of centimeters. Let's correct this.
+
+```{r}
+cohort$admissionheight[cohort$admissionheight <= 5] <- 160
+```
+
+For the other case and for the missing data, let's use the median.
+
+```{r}
+library(zoo)
+cohort$admissionheight[cohort$admissionheight >= 250] <- NA
+cohort$admissionheight <- na.aggregate(cohort$admissionheight, FUN = median)
+```
+
+Here we used the function `na.aggregate()` from the `zoo` library which works the same way as the aggregate function we used before, but applies directly to the missing values. If you got an error saying you don't have the `zoo` library installed, just run this line: `install.packages("zoo")`.
+
+Now we can plot it again and see the distribution.
+
+```{r, message=FALSE}
+ggplot(data = cohort) +
+geom_histogram(aes(x = admissionheight), fill = "darkgreen") +
+labs(title = "Admission Height Distribution", x = "Height", y = "Frequency")
+```
+
+When we are preparing the data for a study we need to apply this same process to all the variables, taking into consideration the modelling strategy.
+
+#### Temperature
+
+```{r, message=FALSE}
+ggplot(data = cohort) +
+geom_histogram(aes(x = temperature), fill = "darkred") +
+labs(title = "Temperature Distribution", x = "Temperature", y = "Frequency")
+```
+
+Here we see some temperatures bellow zero! Let's fix it using the median again.
+
+```{r, message=FALSE}
+cohort$temperature[cohort$temperature <= 0] <- NA
+cohort$temperature <- na.aggregate(cohort$temperature, FUN = median)
+
+ggplot(data = cohort) +
+geom_histogram(aes(x = temperature), fill = "darkred") +
+labs(title = "Temperature Distribution", x = "Temperature", y = "Frequency")
+```
+
+After removing absurd data values that are very distant from the distribution we can better visualize the data, once to fit a negative temperature on the scale our plot got squeezed and difficult to see!
+
+#### Apache Score and Acute Physiology Score
+
+```{r, message=FALSE}
+library(gridExtra)
+
+p1 <- ggplot(data = cohort) +
+      geom_histogram(aes(x = acutephysiologyscore), fill = 'darkorange2') +
+      labs(title = "Acute Physiology Score Distribution", x = "Acute Physiology Score", y =   "Frequency") +
+      theme(plot.title = element_text(size = 11))
+
+p2 <- ggplot(data = cohort) +
+      geom_histogram(aes(x = apachescore), fill = 'darkorange2') +
+      labs(title = "Apache Score Distribution", x = "Apache Score", y =   "Frequency") +
+      theme(plot.title = element_text(size = 11))
+
+grid.arrange(p1, p2, ncol = 2)
+```
+
+#### Admission Weight
+
+```{r}
+ggplot(data = cohort) +
+geom_histogram(aes(x = admissionweight), fill = "darkgoldenrod1") +
+labs(title = "Admission Weight Distribution", x = "Weight", y = "Frequency")
+```
+
+Here we've encountered missing values again! What is the best way to deal with this missing data? Should we replace it by the median? Let's look at the data!
+
+```{r}
+print(cohort[is.na(cohort$admissionweight),])
+```
+
+Some important questions to consider when we are dealing with missing data are:
+
+-   Does the missing data affect one specific group?
+-   Is it possible to identify a reason for this missing data?
+-   How does my solution for the missing data will affect my analysis?
+
+Answering these questions is not a simple task and not thinking thoroughly about them is very often the source of encoded bias in machine learning models. A first step into this investigation is to compare to distribution of the other variables in the group with the missing data with the overall distribution.
+
+```{r, message=FALSE}
+# Assign cohort subset to new variable
+subset_with_NA <- cohort[is.na(cohort$admissionweight),]
+# Plot histograms
+ggplot(data = cohort) +
+geom_histogram(data = cohort, aes(x = age, fill = "All Subjects")) +
+geom_histogram(data = subset_with_NA, aes(x = age, fill = "Missing Admission Weight")) +
+scale_fill_manual(values = c("All Subjects" = "grey40", "Missing Admission Weight" = "red")) +
+labs(title = "Age Distribution of Subjects with Missing Admission Weight", x = "Age", y = "Frequency", fill = "")
+```
+
+This plot doesn't really tell us much. Why? Because histograms show the actual amount of elements with each value, and not the proportion. Our patient subset with missing data is much smaller then the full cohort which makes it difficult to compare the distributions looking at the histograms. A way around this is to plot the the kernel density which is normalized!
+
+```{r, message=FALSE}
+# Assign cohort subset to new variable
+subset_with_NA <- cohort[is.na(cohort$admissionweight),]
+# Plot histograms
+ggplot(data = cohort) +
+geom_density(data = cohort, aes(x = age, fill = "All Subjects"), alpha = .3) +
+geom_density(data = subset_with_NA, aes(x = age, fill = "Missing Admission Weight"), alpha = .3) +
+scale_fill_manual(values = c("All Subjects" = "grey40", "Missing Admission Weight" = "red")) +
+labs(title = "Age Distribution of Subjects with Missing Admission Weight", x = "Age", y = "Frequency", fill = "")
+```
+
+The `alpha` parameter here determines the transparency, which allows to see what is happening under the overlaps. This plot shows us that the subjects missing the admission weight information are in average younger then the overall population. Should we remove those individuals? Should we replace the data with the mean weight by age? We must consider: how does that affect my analysis?
+
+Let's do the same to all the other variables. We can use a "for" loop for that.
+
+```{r}
+
+# Create a list to store plots
+plot_list <- list()
+
+# Loop through each numeric variable in the dataframe
+for (col_name in names(cohort %>% select_if(is.numeric))) {
+  if (col_name != "admissionweight") {
+    plot <- ggplot(data = cohort) +
+      geom_density(aes(x = .data[[col_name]], fill = "All Subjects"), alpha = .3) +
+      geom_density(data = subset_with_NA, aes(x = .data[[col_name]], fill = "Missing Admission Weight"), alpha = .3) +
+      scale_fill_manual(values = c("All Subjects" = "grey40", "Missing Admission Weight" = "red")) +
+      labs(title = paste("Distribution of Subjects with Missing Admission Weight -", col_name),
+           x = col_name,
+           y = "Density",
+           fill = "")
+    
+    plot_list[[col_name]] <- plot
+  }
+}
+
+# Print the plots
+for (col_name in names(plot_list)) {
+  print(plot_list[[col_name]])
+}
+```
+
+Look at these plots and try to think of the implications of removing those subjects from your dataset.
+
+As you can imagine, this process is important not only to learn how to deal with the missing data, but to understand the nature of your data and potential sources of biases.
+
+#### Exercise: Look at the other variables!
+
+#### *Hint:* Plotting Marginals
+
+We can use the package `ggExtra` to plot the distributions of the variables on the axis of any graph, what we normally call "marginal distributions".
+
+```{r}
+p <- ggplot() +
+      geom_point(data = cohort, aes(x = age, y = apachescore, color = gender, shape = actualhospitalmortality)) +
+      geom_smooth(data = mean_apache_by_age, aes(x = age, y = apachescore, linetype = "Mean Apache Score")) +
+        
+      scale_shape_manual(values=c(16, 3), labels = c("Alive", "Expired"), name = 'Hospital Mortality')+
+      scale_color_manual(values = c("lightcoral", "mediumseagreen", "grey"), 
+                         labels = c("Female", "Male", "Unknown"), name = "Gender") +
+      scale_linetype_manual(values = "solid", name = "") +
+      
+      xlab("Age") + 
+      ylab("Apache Score") +
+      ggtitle("Apache Score in the eICU demo data") +
+      theme_economist() +
+      theme(legend.title = element_text(size = 8, face = "bold"), 
+            legend.text = element_text(size = 6),
+            legend.spacing = unit(-0.1, "cm"),
+            legend.key.size = unit(0.3, "cm"))
+```
+
+```{r, message=FALSE, warning=FALSE}
+#install.packages("ggExtra")
+library(ggExtra)
+
+p1 <- ggMarginal(p, type="histogram") # with marginal histogram
+p2 <- ggMarginal(p, type="density") # marginal density
+p3 <- ggMarginal(p, type="boxplot") # marginal boxplot
+
+print(p1)
+print(p2)
+print(p3)
+```
