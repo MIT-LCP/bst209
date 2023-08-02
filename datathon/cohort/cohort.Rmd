@@ -108,9 +108,6 @@ print(prop.table(table(data$race_group)))
 ```{r}
 print(prop.table(table(data$language)))
 ```
-```{r}
-print(prop.table(table(data$language)))
-```
 What is the $SaO_2$ / $SpO_2$ measurement values range?
 
 ```{r}
