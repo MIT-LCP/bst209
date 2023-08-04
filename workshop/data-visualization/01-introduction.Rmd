@@ -36,6 +36,7 @@ head(cohort)
 What do you learn from staring at this table? Let's focus on the APACHE score, which already brings together a lot of information in this table. How quickly can you determine which patients have the highest APACHE scores? Which have the smallest? What is their age? What is their gender? Did they actually die in the hospital? What is the mean APACHE score? Is there a relationship between the APACHE score and age? What is the age distribution of the cohort? For most human brains it is quite difficult to extract this information just from looking at the numbers. In contrast, the answer to all the questions above are readily available from examining this plot:
 
 ```{r, message=FALSE}
+#install.package("ggthemes)
 library(ggthemes)
 
 cohort <- cohort %>%
@@ -58,7 +59,7 @@ ylab("APACHE Score") +
 ggtitle("APACHE Score in the eICU Demo Data") +
 theme_economist() +
 theme(legend.title = element_text(size = 10, face = "bold"), 
-      legend.text = element_text(size = 9),
+      legend.text = element_text(size = 8),
       legend.spacing = unit(-0.1, "cm"),
       legend.key.size = unit(0.3, "cm"))
 ```

@@ -134,7 +134,7 @@ print(p4)
 
 #### Ridgeline plots
 
-Ridgeline plots, or joyplots display the distribution of a quantitative variable for several groups. They’re similar to kernel density plots with vertical faceting, but take up less room.
+Ridgeline plots, or joyplots display the distribution of a quantitative variable for several groups. They're similar to kernel density plots with vertical faceting, but take up less room.
 
 ```{r, message=FALSE}
 #install.packages("ggridges")
@@ -229,5 +229,3 @@ p2 <- ggplot(mean_apache_by_age_by_mortality) + geom_smooth(aes(x = age, y = apa
 print(p1)
 print(p2)
 ```
-
-

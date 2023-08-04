@@ -30,6 +30,7 @@ One of the first things that we need to check is the distribution of the data. O
 First, let's load our data again.
 
 ```{r, message=FALSE, warning = FALSE}
+library(tidyverse)
 cohort <- read_csv("../data/eicu_cohort.csv")
 # Fix age values
 cohort <- cohort %>%
@@ -92,6 +93,7 @@ labs(title = "Actual Hospital Mortality Proportion",
 ***Hint:*** we can make one single figure containing those two plots by using the `grid.arrange()` function from the `gridExtra` package to make subplots.
 
 ```{r}
+#install.packages("gridExtra")
 library(gridExtra)
 
 p1 <- ggplot(data = cohort) +
@@ -127,6 +129,8 @@ selected_rows <- subset(cohort, admissionheight >= 50 & admissionheight <= 100)
 print(selected_rows)
 ```
 
+(In this case, however, given the age and the weight of the subject we have reasons to believe that this might be incorrect data as well! One possibility is the height was imputed in feet).
+
 A way to deal with incorrectly inputted or missing data is by replacing those with the mean or median. The correct solution for dealing with missing data depends on on many factors, like the type of modeling you will be using and the amount of data missing. Here, we are not taking in consideration any modelling strategy, so naively we will replace the missing data with the median.
 
 *Obs:* a way to improve this for example would be to substitute the height not by the total median, but buy the median height of the patients' gender.
@@ -145,6 +149,7 @@ cohort$admissionheight[cohort$admissionheight <= 5] <- 160
 For the other case and for the missing data, let's use the median.
 
 ```{r}
+#install.packages("zoo")
 library(zoo)
 cohort$admissionheight[cohort$admissionheight >= 250] <- NA
 cohort$admissionheight <- na.aggregate(cohort$admissionheight, FUN = median)

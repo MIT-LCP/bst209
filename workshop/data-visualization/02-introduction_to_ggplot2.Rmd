@@ -295,6 +295,9 @@ p + geom_point(aes(age, apachescore, color = gender, shape = actualhospitalmorta
 Finally we can add a theme style to our plot. We used the `theme_economist()` from the Economist magazine.
 
 ```{r, message=FALSE}
+#install.packages("ggthemes")
+library(ggthemes)
+
 p + geom_point(aes(age, apachescore, color = gender, shape = actualhospitalmortality)) +
   scale_shape_manual(values=c(16, 3), labels = c("Alive", "Expired"), name = 'Hospital Mortality') +
   scale_color_manual(values = c("lightcoral", "mediumseagreen", "grey"), 
@@ -330,3 +333,9 @@ p + geom_point(aes(age, apachescore, color = gender, shape = actualhospitalmorta
 ```
 
 Now that we've learned the process and the steps for making a plot with `ggplot2` we can use it to better explore the data! As an exercise you can try to change the variables in this graph and see how it looks like. For example, you can change the APACHE score to the Acute Physiology Score.
+
+## Explore!
+
+Now that we learned how to make a complete plot in R, you can explore trying to change the parameters, variables and geometries to visualize all the dataset. Is important to notice that a huge challenge in data visualization is to plot very high dimensional data. When we have many variables as in the eICU dataset, we will need to make a few different plots to actually be able to visualize all the data without performing major transformations and dimensionality reduction.
+
+One solution is looking for the most representative variables of the dataset, as we did here. The Apache Score uses many of the other variables available in the dataset in its calculation, so in a way, it already summarizes big part of the data!
