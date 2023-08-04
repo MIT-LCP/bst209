@@ -1,0 +1,93 @@
+---
+title: "01 - Introduction"
+author: "Renata Prôa"
+date: "2023-07-19"
+output:
+  pdf_document:
+    toc: yes
+  html_document:
+    toc: yes
+questions:
+- "Why do we need data visualization?"
+- "How can I use R to visualize my data?"
+- "Do I need to prepare my data for visualization?"
+objectives:
+- "Understand the importance of data visualization."
+- "Get an overview of the workshop."
+- "Learn about the data preparation for visualization."
+keypoints:
+- "Images are an effective way to summarize numerical information for humans and communicate data-driven findings."
+- "Data visualization is crucial for detecting errors and biases that might lead to flawed analyses and false discoveries."
+- "Exploratory Data Analysis and Data Wrangling are an interactive process through which we understand and prepare the data for further analysis."
+  
+subtitle: Data Visualization
+---
+
+# Introduction to Data Visualization
+
+Looking at the numbers and character strings that define a dataset is rarely useful. To convince yourself, print and stare at this data table:
+
+```{r, message=FALSE}
+library(tidyverse)
+cohort <- read_csv("../data/eicu_cohort.csv")
+head(cohort)
+```
+
+What do you learn from staring at this table? Let's focus on the APACHE score, which already brings together a lot of information in this table. How quickly can you determine which patients have the highest APACHE scores? Which have the smallest? What is their age? What is their gender? Did they actually die in the hospital? What is the mean APACHE score? Is there a relationship between the APACHE score and age? What is the age distribution of the cohort? For most human brains it is quite difficult to extract this information just from looking at the numbers. In contrast, the answer to all the questions above are readily available from examining this plot:
+
+```{r, message=FALSE}
+#install.package("ggthemes)
+library(ggthemes)
+
+cohort <- cohort %>%
+  mutate(age = as.integer(age)) %>%
+  mutate(age = if_else(is.na(age), 91.5, age))
+
+mean_apache_by_age <- aggregate (apachescore ~ age, data = cohort, FUN = mean)
+
+ggplot() +
+geom_point(data = cohort, aes(x = age, y = apachescore, color = gender, shape = actualhospitalmortality)) +
+geom_smooth(data = mean_apache_by_age, aes(x = age, y = apachescore, linetype = "Mean APACHE Score")) +
+  
+scale_shape_manual(values=c(16, 3), labels = c("Alive", "Expired"), name = 'Hospital Mortality')+
+scale_color_manual(values = c("lightcoral", "mediumseagreen", "grey"), 
+                   labels = c("Female", "Male", "Unknown"), name = "Gender") +
+scale_linetype_manual(values = "solid", name = "") +
+
+xlab("Age") + 
+ylab("APACHE Score") +
+ggtitle("APACHE Score in the eICU Demo Data") +
+theme_economist() +
+theme(legend.title = element_text(size = 10, face = "bold"), 
+      legend.text = element_text(size = 8),
+      legend.spacing = unit(-0.1, "cm"),
+      legend.key.size = unit(0.3, "cm"))
+```
+
+We are reminded of the saying "a picture is worth a thousand words". Data visualization provides a powerful way to communicate a data-driven finding. In some cases, the visualization is so convincing that no follow-up analysis is required. We also note that many widely used data analysis tools were initiated by discoveries made via exploratory data analysis (EDA). EDA is perhaps the most important part of data analysis, yet is often overlooked.
+
+It is also important to note that mistakes, biases, systematic errors and other unexpected problems often lead to data that should be handled with care. Failure to discover these problems often leads to flawed analyses and false discoveries. As an example, consider that measurement devices sometimes fail and that most data analysis procedures are not designed to detect these. Yet, these data analysis procedures will still give you an answer. The fact that it can be hard or impossible to notice an error just from the reported results, makes data visualization particularly important.
+
+Today we will learn the basics of the ggplot2 package - the software we will use to learn the basics of data visualization and exploratory data analysis. We will use the [demo version](https://doi.org/10.13026/4mxk-na84) of the [eICU Collaborative Research Database](https://eicu-crd.mit.edu/about/eicu/) that we used in the last workshop to learn the basics of ggplot2. As a recap, this is a publicly available dataset comprising deidentified physiological data collected from critically ill patients.
+
+## Preparing data for visualization
+
+Before we start getting hands on with `ggplot2` we should naturally ask ourselves: is it necessary to apply any transformations to the data before generating visualization? The answer to this question is in fact: yes and no. The process of EDA is an interactive one that involve data visualization and data wrangling in an intricate way. Data wrangling, data munging or data preprocessing are terms used to describe the process and the transformations applied the raw data in order to prepare it for further analysis.
+
+Generating images that communicate our data in a clear might require several transformations to the raw data. However to figure out what transformation are required and what is the best way to show our data data in an image we need to examine the data and understand it. And the best way to do this is by actually seeing the data! In this workshop we will get the feeling of how this process actually happens.
+
+## More Resources
+
+Note that there is much more to data visualization than what we cover here. More references include:
+
+-   ER Tufte (1983) The visual display of quantitative information. Graphics Press.
+-   ER Tufte (1990) Envisioning information. Graphics Press.
+-   ER Tufte (1997) Visual explanations. Graphics Press.
+-   A Gelman, C Pasarica, R Dodhia (2002) Let's practice what we preach: Turning tables into graphs. The American Statistician 56:121-130
+-   NB Robbins (2004) Creating more effective graphs. Wiley
+-   Rob Kabacoff (2018) [Data Visualization with R](https://rkabacoff.github.io/datavis/)
+
+Interactive graphics are also a good way to engage users and enable them to explore data insights. Below are some useful resources for learning more.
+
+-   <https://shiny.rstudio.com/>
+-   <https://d3js.org/>
