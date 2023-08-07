@@ -13,13 +13,13 @@ output:
 ```{r}
 # Load necessary libraries
 library(rpart)
-library(adabag)
+library(caret)
 library(gbm)
 library(ipred)
 library(pROC)
+library(randomForest)
 
 ```
-
 ## Comparing model performance
 We’ve now learned the basics of the various tree methods and have visualized most of them. Let’s finish by comparing the performance of our models on our held-out test data. Our goal, remember, is to predict whether or not a patient will survive their hospital stay using the patient’s age and acute physiology score computed on the first day of their ICU stay.
 
@@ -30,14 +30,8 @@ clf <- list()
 # Train the Decision Tree model
 clf[['Decision Tree']] <- rpart(actualhospitalmortality_enc ~ age + acutephysiologyscore, data = train_df, method = "class")
 
-# Train the AdaBoost model
-clf[['AdaBoost']] <- boosting(formula = actualhospitalmortality_enc ~ age + acutephysiologyscore, 
-                data = train_df, 
-                boos = TRUE, 
-                mfinal = 6)
-
 # Train the Gradient Boosting model
-clf[['Gradient Boosting']] <- gbm(formula = as.factor(actualhospitalmortality_enc) ~ age + acutephysiologyscore, 
+clf[['Gradient Boosting']] <- gbm(formula = as.character(actualhospitalmortality_enc) ~ age + acutephysiologyscore, 
            distribution = "bernoulli", 
            data = train_df, 
            n.trees = 15)
@@ -47,16 +41,18 @@ clf[['Random Forest']] <- randomForest(actualhospitalmortality_enc ~ age + acute
 
 # Train the Bagging model
 clf[['Bagging']] <- bagging(actualhospitalmortality_enc ~ age + acutephysiologyscore, data = train_df, nbagg = 10)
+```
 
+```{r}
+library(pROC)
+library(ggplot2)
+library(dplyr)
 
-## THIS NEEDS TO BE REVISED!
+roc_df <- data.frame()
 
-# Print AUROC for each model
 for(curr_mdl in names(clf)) {
   # Make predictions on test data
-  if (curr_mdl == 'AdaBoost') {
-    yhat <- predict(clf[[curr_mdl]], newdata = test_df, type = 'response')$prob[,2]
-  } else if (curr_mdl == 'Gradient Boosting') {
+  if (curr_mdl == 'Gradient Boosting') {
     yhat <- predict.gbm(clf[[curr_mdl]], newdata = test_df, n.trees = 15, type = 'response')
   } else {
     yhat <- predict(clf[[curr_mdl]], newdata = test_df, type = 'prob')[,2]
@@ -68,6 +64,22 @@ for(curr_mdl in names(clf)) {
   
   # Print AUROC score
   cat(sprintf('AUROC for %s: %f\n', curr_mdl, score))
+  
+  # Create dataframe to hold ROC curve coordinates
+  roc_data <- data.frame(FPR = (1-roc_obj$specificities), TPR = roc_obj$sensitivities, Model = curr_mdl)
+  
+  # Append to the existing roc_df
+  roc_df <- rbind(roc_df, roc_data)
 }
+
+# Plot ROC curve
+ggplot(roc_df, aes(x = FPR, y = TPR, color = Model)) +
+  geom_path() +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray") +
+  labs(title = "Receiver Operating Characteristic (ROC) Curve",
+       x = "False Positive Rate (1 - Specificity)",
+       y = "True Positive Rate (Sensitivity)") +
+  theme_minimal()
 ```
+
 
