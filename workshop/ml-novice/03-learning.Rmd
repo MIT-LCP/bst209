@@ -27,8 +27,6 @@ How do humans learn? Typically we are given examples and we learn rules through 
 
 Our model has a number of tweakable parameters. We need to find the optimal values for those parameters such that our model outputs the "best" predictions for a set of input variables.
 
-![Model training](../fig/ml_model.png){: width="600px"}
-
 ## Loss functions
 
 Finding the best model means defining "best". We need to have some way of quantifying the difference between a "good" model (capable of making useful predictions) vs a "bad" model (not capable of making useful predictions). 
@@ -57,7 +55,7 @@ ggplot(data, aes(x = x, y = y)) +
   ggtitle("Prediction error")
 ```
 
-![Distance from target](../fig/loss_line_error.png){: width="600px"}
+
 
 The further away from the data points our line gets, the bigger the error. Our best model is the one with the smallest error. Mathematically, we can define the mean squared error as:
 
@@ -97,32 +95,27 @@ ggplot() +
   ylab("Loss (squared error)")
 ```
 
-![Mean squared error](../fig/mean_squared_error.png){: width="600px"}
-
 As we can see, our loss rapidly increases as predictions ($$\hat{y}$$) move away from the true values ($y$). The result is that outliers have a strong influence on our model fit. 
 
 ## Optimisation
 
 In machine learning, there is typically a training step where an algorithm is used to find the optimal set of model parameters (i.e. those parameters that give the minimum possible error). This is the essence of machine learning!
 
-![Model training](../fig/ml_model_loss.png){: width="600px"}
 
 There are many approaches to optimisation. [Gradient descent](https://en.wikipedia.org/wiki/Gradient_descent) is a popular approach. In gradient descent we take steps in the opposite direction of the gradient of a function, seeking the lowest point (i.e. the lowest error).
 
-> ## Exercise
-> A) What does a loss function quantify?  
-> B) What is an example of a loss function?   
-> C) What are some other names used for loss functions?  
-> D) What is happening when a model is trained?  
-> 
-> > ## Solution
-> > A) A loss function quantifies the goodness of fit of a model (i.e. how closely its predictions match the known targets).  
-> > B) One example of a loss function is mean squared error (M.S.E.).  
-> > C) Objective function, error function, and cost function.  
-> > D) When a model is trained, we are attempting to find the optimal model parameters in process known as "optimisation".  
-> {: .solution}
-{: .challenge}
+## Exercise
+A) What does a loss function quantify?  
+B) What is an example of a loss function?   
+C) What are some other names used for loss functions?  
+D) What is happening when a model is trained?  
+ 
+## Solution
+A) A loss function quantifies the goodness of fit of a model (i.e. how closely its predictions match the known targets).  
+B) One example of a loss function is mean squared error (M.S.E.).  
+C) Objective function, error function, and cost function.  
+D) When a model is trained, we are attempting to find the optimal model parameters in process known as "optimisation".  
+
 
 Now that we've touched on how machines learn, we'll tackle the problem of predicting the outcome of patients admitted to intensive care units in hospitals across the United States.
 
-{% include links.md %}

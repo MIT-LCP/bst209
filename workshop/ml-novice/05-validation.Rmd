@@ -20,11 +20,12 @@ keypoints:
 
 One measure of the performance of a classification model is accuracy. Accuracy is defined as the overall proportion of correct predictions. If, for example, we take 50 shots and 40 of them hit the target, then our accuracy is 0.8 (40/50).
 
-![Ren Hayakawa Archery Olympics](../fig/japan_ren_hayakawa.jpg){: width="600px"}
 
 Accuracy can therefore be defined by the formula below:
 
-$$ Accuracy = \frac{Correct\ predictions}{All\ predictions}$$
+$$
+Accuracy = \frac{Correct\ predictions}{All\ predictions}
+$$
 
 What is the accuracy of our model at predicting in-hospital mortality?
 
@@ -96,9 +97,8 @@ print(paste("Accuracy on test set:", acc_test))
 
 ```
 Accuracy on training set: 0.92
-Accuracy on test set: 0.93
+Accuracy on test set: 0.90
 ```
-{: .output}
 
 Not bad!
 
@@ -108,7 +108,7 @@ Machine learning is iterative by nature. We want to improve our model, tuning an
 
 The answer is that we typically partition off part of our training set to use for validation. The "validation set" can be used to iteratively improve our model, allowing us to save our test set for the \*final\* evaluation.
 
-![Validation set](../fig/training_val_set.png){: width="600px"}
+![Validation set](fig/section6-fig1.png)
 
 ## Cross validation
 
@@ -128,7 +128,7 @@ Two popular of the most popular cross-validation methods:
 
 In K-fold cross validation, "K" indicates the number of times we split our data into training/validation sets. With 5-fold cross validation, for example, we create 5 separate training/validation sets.
 
-![5-fold validation](../fig/k_fold_cross_val.png){: width="600px"}
+![5-fold validation](fig/section6-fig2.jpg)
 
 With K-fold cross validation, we select our model to evaluate and then:
 1. Partition the training data into a training set and a validation set. An 80%, 20% split is common.
@@ -136,7 +136,7 @@ With K-fold cross validation, we select our model to evaluate and then:
 3. Evaluate performance on the validation set.
 4. Repeat the process 5 times, then average the parameter and performance values.
 
-When creating our training and test sets, we needed to be careful to avoid data leaks. The same applies when creating training and validation sets. We can use a `pipeline` object to help manage this issue.
+When creating our training and test sets, we needed to be careful to avoid data leaks. The same applies when creating training and validation sets.
 
 ```{r}
 # perform K-fold cross-validation
@@ -169,20 +169,12 @@ mean_accuracy <- mean(accuracy)
 std_accuracy <- sd(accuracy)
 
 # print the average accuracy
-print(paste("Average accuracy:", percent(mean_accuracy), "SD:", round(std_accuracy, digits = 2)))
+print(paste("Cross-validation avergage accuracy:", percent(mean_accuracy), "SD:", percent((std_accuracy))))
 ```
 
-```
-Cross-validation accuracy, mean (sd: 0.024): 92%
-```
-{: .output}
+## Leave-one-out cross validation
 
 Leave-one-out cross validation is the same idea, except that we have many more folds. In fact, we have one fold for each data point. Each fold we leave out one data point for validation and use all of the other points for training.
 
-{% include links.md %}
-
-
-
-
-
+![loocv](fig/section6-fig2.png)
 
