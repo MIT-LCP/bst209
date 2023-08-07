@@ -20,6 +20,12 @@ output:
     toc: true
 ---
 
+# Process Mining
+
+Jan Niklas Adams
+
+In this class, we are going to show the limitations of the traditional use of tabular data and how to circumvent them. Based on these limitations, we will introduce event logs. We will introduce process mining, a class of algorithms that leverages event logs to produce insights about the underlying process and show typical applications of process mining algorithms in medical data.
+
 ## Limitations of Tabular Data
 
 So far, we have looked at data through a tabular lens: Every single data point represents one patient and all the information about the patient should be contained in that single data point. However, patient data is often composed of different treatments at different points in time. Not incorporating this leads to a loss of contextual information and timing information.
