@@ -1,0 +1,326 @@
+---
+title: "Introduction to Decision Trees"
+date: '2023-06-06'
+output: html_document
+---
+
+# Part 1: Loading and cleaning the dataset
+
+## Predicting the outcome of critical care patients
+
+We would like to develop an algorithm that can be used to predict the outcome of patients who are admitted to intensive care units using observations available on the day of admission.
+
+Our analysis focuses on ~500 patients admitted to critical care units in the continental United States. Data is provided by the Philips eICU Research Institute, a critical care telehealth program.
+
+We will use decision trees for this task. Decision trees are a family of intuitive machine learning algorithms that often perform well at prediction and classification.
+
+OBJECTIVES:
+- Load the patient data
+- Explore summary characteristics of the data 
+- Prepare the data for analysis
+ 
+## Downloading the required packages 
+
+```{r}
+
+#install.packages("pacman")
+
+#p_load from pacman loads the specified packages and downloads the ones missing.
+pacman::p_load(tidyverse, summarytools, caret, rpart, rpart.plot, gridExtra, gbm)
+
+```
+
+## Loading Data
+
+We will begin by loading a set of observations from our critical care dataset. The data includes variables collected on Day 1 of the stay, along with outcomes such as length of stay and in-hospital mortality.
+
+```{r}
+cohort <- read_csv("../data/eicu_cohort.csv")
+```
+
+The data has been assigned to a dataframe called cohort. Let's take a look at the first few lines:
+
+```{r}
+# print the first 10 rows of the dataframe 
+head(cohort, n = 10)
+```
+
+## Preparing the data for analysis
+
+We first need to do some basic data preparation. First we encode the column "actualhospitalmortality" into numerical factor labels.
+
+```{r}
+cohort <- cohort %>% 
+          mutate(actualhospitalmortality_enc = ifelse(actualhospitalmortality == "EXPIRED", 0, 1),
+                 actualhospitalmortality_enc = as.factor(actualhospitalmortality_enc))
+```
+
+Now "ALIVE" == 1, and "EXPIRED" == 0. 
+
+
+```{r}
+#Remove patients with an APS of -1
+cohort <- cohort[cohort$acutephysiologyscore != -1, ]
+
+```
+
+In the eICU Research Database, ages over 89 years are recorded as ">89" to comply with US data privacy laws. For simplicity, we will assign an age of 91.5 years to these patients (this is the approximate average age of patients over 89 in the dataset).
+
+```{r}
+# Handle the deidentified ages
+cohort <- cohort %>%
+  mutate(age = as.numeric(age)) %>%
+  mutate(age = if_else(is.na(age), 91.5, age))
+```
+
+Now let’s use the tableone package to review our dataset.
+
+```{r}
+# Generate summary characteristics using the descr function, from the 'summarytools' package
+df_summary <- descr(cohort)
+print(df_summary)
+```
+
+The output shows summary characteristics of our dataset.
+
+## Creating train and test sets
+
+We will only focus on two variables for our analysis, age and acute physiology score. Limiting ourselves to two variables (or "features") will make it easier to visualize our models.
+
+```{r}
+
+# Define features and outcome
+features <- c("age", "acutephysiologyscore")
+outcome <- "actualhospitalmortality_enc"
+
+# Split the data into t raining and testing sets
+set.seed(42)  # Set random seed for reproducibility
+train_index <- createDataPartition(cohort[[outcome]], p = 0.7, list = FALSE)
+x_train <- cohort[train_index, features]
+y_train <- cohort[train_index, outcome]
+x_test <- cohort[-train_index, features]
+y_test <- cohort[-train_index, outcome]
+
+# binding the dataframes with cbind 
+train_df = cbind(x_train, y_train)
+test_df = cbind(x_test, y_test)
+```
+
+Questions: 
+a) Why did we split our data into training and test sets?
+b) What is the effect of setting a seed before employing the splitting algorithm?
+
+
+# Part 2: Decision trees
+
+# The simplest tree
+
+Let's build the simplest tree model we can think of: a classification tree with only one split. Decision trees of this form are commonly referred to under the umbrella term Classification and Regression Trees (CART) [1].
+
+While we will only be looking at classification here, regression isn't too different. After grouping the data (which is essentially what a decision tree does), classification involves assigning all members of the group to the majority class of that group during training. Regression is the same, except you would assign the average value, not the majority.
+
+In the case of a decision tree with one split, often called a "stump", the model will partition the data into two groups, and assign classes for those two groups based on majority vote. There are many parameters available for the DecisionTreeClassifier class; by specifying max_depth=1 we will build a decision tree with only one split - i.e. of depth 1.
+
+[1] L. Breiman, J. Friedman, R. Olshen, and C. Stone. Classification and Regression Trees. Wadsworth, Belmont, CA, 1984.
+
+```{r}
+# Convert encoded mortality to factor
+train_df$actualhospitalmortality_enc <- as.factor(train_df$actualhospitalmortality_enc)
+
+# Create and fit the decision tree model
+mdl <- rpart(actualhospitalmortality_enc ~ age + acutephysiologyscore, data = train_df, method = "class", control = rpart.control(maxdepth = 3))
+
+# Visualize the decision tree using rpart.plot
+rpart.plot(mdl)
+```
+
+
+Here we see three nodes: a node at the top, a node in the lower left, and a node in the lower right.
+
+The top node is the root of the tree: it contains all the data. 
+
+The approach is referred to as "greedy" because we are choosing the optimal split given our current state. Let's take a closer look at our decision boundary.
+
+```{r}
+# Generate grid of points
+grid <- expand.grid(age = seq(min(train_df$age), max(train_df$age), length.out = 100),
+                    acutephysiologyscore = seq(min(train_df$acutephysiologyscore), max(train_df$acutephysiologyscore), length.out = 100))
+
+# Predict class label for each point in the grid
+grid$prediction <- predict(mdl, newdata = grid, type = "class")
+
+# Predict class label for the test data
+test_df$prediction <- predict(mdl, newdata = test_df, type = "class")
+
+# Create decision boundary plot
+decision_boundary_plot <- ggplot(grid, aes(x = age, y = acutephysiologyscore, fill = prediction)) +
+  geom_tile() +
+  geom_point(data = test_df, aes(fill = factor(actualhospitalmortality_enc)), color = "black", shape = 21, size = 2) + 
+  scale_color_manual(values = c("red", "blue")) +
+  labs(title = "Decision Boundary",
+       x = "Age",
+       y = "Acute Physiology Score",
+       fill = "Predicted Class") +
+  theme_classic()
+
+
+decision_boundary_plot
+
+
+```
+
+In this plot we can see the decision boundary on the y-axis, separating the predicted classes. The true classes are indicated at each point. Where the background and point colours are mismatched, there has been misclassification. Of course we are using a very simple model.
+
+
+## Increasing the depth of our tree
+
+In the previous part we created a very simple decision tree. Let's see what happens when we introduce new decision points by increasing the depth.
+
+```{r}
+# Train model
+mdl <- rpart(actualhospitalmortality_enc ~ age + acutephysiologyscore, data = train_df, method = "class", control = rpart.control(maxdepth = 5))
+```
+
+Now our tree is more complicated! We can see a few vertical boundaries as well as the horizontal one from before. Some of these we may like, but some appear unnatural. Let's look at the tree itself.
+
+```{r}
+# Plot tree
+rpart.plot(mdl, main = "Decision tree (maxdepth 5)")
+```
+
+## Decision Boundary
+
+We can also visualize our decision boundary again, and see how it has changed with the tree depth:
+
+```{r}
+# Generate grid of points
+grid <- expand.grid(age = seq(min(train_df$age), max(train_df$age), length.out = 100),
+                    acutephysiologyscore = seq(min(train_df$acutephysiologyscore), max(train_df$acutephysiologyscore), length.out = 100))
+
+# Predict class label for each point in the grid
+grid$prediction <- predict(mdl, newdata = grid, type = "class")
+
+# Predict class label for the test data
+test_df$prediction <- predict(mdl, newdata = test_df, type = "class")
+
+# Create decision boundary plot
+decision_boundary_plot <- ggplot(grid, aes(x = age, y = acutephysiologyscore, fill = prediction)) +
+  geom_tile() +
+  geom_point(data = test_df, aes(fill = factor(actualhospitalmortality_enc)), color = "black", shape = 21, size = 2) + 
+  scale_color_manual(values = c("red", "blue")) +
+  labs(title = "Decision Boundary",
+       x = "Age",
+       y = "Acute Physiology Score",
+       fill = "Predicted Class") +
+  theme_classic()
+
+
+decision_boundary_plot
+```
+
+
+## Decision trees have high “variance”
+
+Decision trees have high “variance”. In this context, variance refers to a property of some models to have a wide range of performance given random samples of data. Let’s take a look at randomly slicing the data we have to see what that means.
+
+```{r}
+# Set seed for reproducibility
+set.seed(123)
+
+# Initialize a list to store the plots
+plots <- list()
+
+# For three iterations
+for(i in 1:3) {
+  # generate indices in a random order
+  idx <- sample(nrow(train_df), nrow(train_df))
+  
+  # only use the first 100
+  idx <- idx[1:100]
+  temp_df <- train_df[idx, ]
+  
+  # train the model using the dataset
+  mdl <- rpart(actualhospitalmortality_enc ~ age + acutephysiologyscore, data = temp_df, method = "class", 
+               control = rpart.control(maxdepth = 5))
+
+  # Generate grid of points
+  grid <- expand.grid(age = seq(min(train_df$age), max(train_df$age), length.out = 100),
+                      acutephysiologyscore = seq(min(train_df$acutephysiologyscore), 
+                                                 max(train_df$acutephysiologyscore), length.out = 100))
+  
+  
+  # Predict class label for each point in the grid
+  grid$prediction <- predict(mdl, newdata = grid, type = "class")
+  
+  # Predict class label for the test data
+  temp_df$prediction <- predict(mdl, newdata = temp_df, type = "class")
+  
+  # Create decision boundary plot
+  plots[[i]] <- ggplot(grid, aes(x = age, y = acutephysiologyscore, fill = prediction)) +
+  geom_tile() +
+  geom_point(data = test_df, aes(fill = factor(actualhospitalmortality_enc)), color = "black", shape = 21, 
+             size = 2) + 
+  #scale_fill_manual(values = c("red", "blue")) +
+  scale_color_manual(values = c("red", "blue")) +
+  labs(title = "Decision Boundary",
+       x = "Age",
+       y = "APS",
+       fill = "Predicted Class") +
+  theme_classic()
+}
+
+# Arrange the plots in a grid
+gridExtra::grid.arrange(grobs = plots, nrow = 3)
+```
+
+Above we can see that we are using random subsets of data, and as a result, our decision boundary can change quite a bit. As you could guess, we actually don’t want a model that randomly works well and randomly works poorly.
+
+There is an old joke: two farmers and a statistician go hunting. They see a deer: the first farmer shoots, and misses to the left. The next farmer shoots, and misses to the right. The statistician yells “We got it!!”.
+
+While it doesn’t quite hold in real life, it turns out that this principle does hold for decision trees. Combining them in the right way ends up building powerful models.
+
+
+# Part 3: Ensemble Methods - Boosting
+
+In the previous part, we demonstrated that decision trees may have high "variance". Their performance can vary widely given different samples of data. An algorithm that performs somewhat poorly at a task - such as simple decision tree - is sometimes referred to as a "weak learner".
+
+The premise of boosting is the combination of many weak learners to form a single "strong" learner. In a nutshell, boosting involves building a models iteratively. At each step we focus on the data on which we performed poorly.
+
+In our context, the first step is to build a tree using the data. Next, we look at the data that we misclassified, and re-weight the data so that we really wanted to classify those observations correctly, at a cost of maybe getting some of the other data wrong this time. Let's see how this works in practice.
+
+```{r}
+
+mdl <- gbm(as.character(actualhospitalmortality_enc) ~ age + acutephysiologyscore, distribution = "bernoulli", data = train_df, n.trees = 100, interaction.depth = 5)
+
+
+summary(mdl)
+```
+
+Let us plot the decision boundries of the boosted tree model
+
+```{r}
+# Generate grid of points
+grid <- expand.grid(age = seq(min(train_df$age), max(train_df$age), length.out = 100),
+                    acutephysiologyscore = seq(min(train_df$acutephysiologyscore), max(train_df$acutephysiologyscore), length.out = 100))
+
+# Predict class label for each point in the grid
+grid$prediction <- predict(mdl, newdata = grid, type = "response")
+
+#Convert to binary outcome
+
+grid$prediction <- as.factor(ifelse(grid$prediction > 0.5, 1, 0))
+
+
+Boostedtreeplot <- ggplot(grid, aes(x = age, y = acutephysiologyscore, fill = prediction)) +
+  geom_tile() + geom_point(data = test_df, aes(fill = factor(actualhospitalmortality_enc)), color = "black", shape = 21, size = 2) +
+  labs(title = "Decision Boundary",
+       x = "Age",
+       y = "Acute Physiology Score",
+       fill = "Predicted Class") +
+  theme_classic()
+
+Boostedtreeplot
+
+```
+
+
