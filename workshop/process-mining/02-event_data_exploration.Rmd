@@ -36,6 +36,7 @@ We need to convert the CSV-file we have imported as a dataframe into an event lo
 ```{r}
 
 # We need to load the BupaR library for process mining
+#install.packages("bupaverse")
 library(bupaverse)
 log <- log %>%
   

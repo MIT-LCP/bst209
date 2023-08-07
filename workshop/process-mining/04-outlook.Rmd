@@ -79,6 +79,7 @@ Please note: If there is neither Leucocytes nor CRP for a patient, the rule is s
 When using performance analysis, we mostly want to investigate the timely nature of the process. When using a process map, we can replay the patients' path through this process scaled by their time in the process to get an overview of timely dynamics. We use another version of the event log with more associated data.
 
 ```{r}
+#install.packages("processanimateR")
 library(processanimateR)
 library(dplyr)
 library(bupaR)
@@ -111,6 +112,7 @@ animate_process(sepsisBase,
 While this provides a great overview, we can also dive deeper into performance metrics. We can plot the timely dynamic of every individual case to find commonalities in delays between activities or batching behavior, i.e., the same activity of different cases being executed all together.
 
 ```{r}
+#install.packages("psmineR")
 library(psmineR)
 log %>%
   ps_detailed()
@@ -129,6 +131,7 @@ log %>%
 We want to show an example of how to employ machine learning on event logs here. We want to predict the next things that will happen to a patient based on the things that have happened so far. This is called next-activity prediction. We will use a simple logistic regression.
 
 ```{r}
+#install.packages("processpredictR")
 library(processpredictR)
 library(dplyr)
 library(nnet)
