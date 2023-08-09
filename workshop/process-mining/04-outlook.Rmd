@@ -72,7 +72,7 @@ log %>%
     plot()
 ```
 
-Please note: If there is neither Leucocytes nor CRP for a patient, the rule is seen as fulfilled, therefore, the prevalence of both activities in the true partition is not 100%.
+Please note: If there are neither Leucocytes nor CRP for a patient, the rule is seen as fulfilled, therefore, the prevalence of both activities in the true partition is not 100%.
 
 ## Performance Analysis
 
@@ -220,7 +220,7 @@ pred_class <- predict(fit, newdata = test_set)
 cm <- confusionMatrix(as.factor(pred_class), as.factor(test_set$next_activity))
 ```
 
-We can visualize the confusion matrix to investigate the performance of the model. Based on the previous activities and their order, the regression can derive some knowledge about the next activity. This could probably be improved by incorporating more data into the model or by making the model more complex.
+We can visualize the confusion matrix to investigate the performance of the model. Based on the previous activities and their order, the regression can derive some knowledge about the next activity. This could probably be improved by incorporating more data into the model or by making the model more complex. Some hints of which data to include in the predictive model can be derived by looking at the exploratory analysis we conducted on the event data, e.g., the age of a patient or a suspected infection.
 
 ```{r}
 # visualize confusion matrix
