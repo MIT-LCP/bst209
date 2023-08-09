@@ -28,7 +28,7 @@ Event logs often come in the form of a CSV-file or the standardized IEEE event l
 
 ```{r}
 log <- read.csv("../Data/sepsis_event_log.csv")
-log
+head(log)
 ```
 
 We need to convert the CSV-file we have imported as a dataframe into an event log format that can be processed by the library.

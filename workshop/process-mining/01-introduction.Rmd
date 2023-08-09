@@ -45,7 +45,7 @@ Now we would like to incorporate more data to get a more wholesome view of the t
 We add two additional columns that describe the ventilation of patients. However, not all patients were ventilated, therefore, there are some empty cells.
 
 | Patient | Antibiotics Amount | Antibiotics Type | SOFA | Ventilation Duration | Tube Size |
-|------------|------------|------------|------------|------------|------------|
+|------------|----------------|---------------|------------|----------------|-----------|
 | 132     | 20mg               | X                | 3    | 5h                   | 2         |
 | 134     | 34mg               | Y                | 4    | \-                   | \-        |
 | 152     | 21mg               | Z                | 2    | \-                   | \-        |
@@ -57,7 +57,7 @@ Problem 1: Incorporating different actions taken during treatment will lead to v
 The antibiotics doses in the previous table are aggregated amounts. We would like to express the individual administration of antibiotics. We add additional columns. When there is variation in the amounts of treatments, we have to include empty cells.
 
 | Patient ID | First AB Amount | First AB Type | SOFA | Second AB Amount | Second AB Type | SOFA |
-|-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+|-----------|---------------|-------------|-----------|----------------|-----------------|-----------|
 | 132        | 20mg            | X             | 3    | \-               | \-             | \-   |
 | 134        | 20mg            | Y             | 4    | 14mg             | Y              | 3    |
 | 152        | 21mg            | Z             | 2    | \-               | \-             | \-   |
@@ -69,7 +69,7 @@ Problem 2: Multiplicities of treatments can only be incorporated when introducin
 The previous tables did not incorporate timing or ordering information, e.g., was the patient first ventilated or given antibiotics. We can add it explicitly, however, the order of treatment actions is never directly encoded and always has to be inferred through the numbering.
 
 | Pat. | AB Pos. | AB Time | AB Am. | AB Type | SOFA | Vent. Pos. | Vent. Time | Vent. Dur. | Tube Size |
-|--------|--------|--------|--------|--------|--------|--------|--------|--------|--------|
+|--------|--------|-----------|--------|----------|---------|----------|-----------|-----------|----------|
 | 132  | 2       | 10pm    | 20mg   | X       | 3    | 1          | 8pm        | 5h         | 2         |
 | 134  | 1       | 8am     | 34mg   | Y       | 4    | \-         | \-         | \-         | \-        |
 | 152  | 1       | 11am    | 21mg   | Z       | 2    | \-         | \-         | \-         | \-        |
@@ -125,9 +125,9 @@ Process mining describes the discipline of generating knowledge about the underl
 
 -   **Conformance Checking:** Does the process conform to some specification and how could deviations be aligned with the specifications?
 
--   **Performance Analysis:** What are bottlenecks in the process?
+-   **Performance Analysis:** What are the bottlenecks in the process?
 
--   **Operational support:** Prediction and recommendation of outcomes and actions in an ongoing process.
+-   **Operational Support:** Prediction and recommendation of outcomes and actions in an ongoing process.
 
 > ### Exercise
 >
