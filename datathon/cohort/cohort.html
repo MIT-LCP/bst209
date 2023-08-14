@@ -378,7 +378,7 @@ being left out, by demographics</li>
 </ol>
 <div id="understand-the-problem-and-dataset" class="section level2">
 <h2>0. Understand the Problem and Dataset</h2>
-<p>Please go through <a href="https://colab.research.google.com/gist/joamats/6838b5329b538e066c9de4468d3ee77b/mit-critical-data-workshop-0.ipynb">Workshop
+<p>Please go through <a href="https://github.com/MIT-LCP/bst209/blob/main/datathon/introduction/introduction.html">Workshop
 0</a> for an Introduction on the Problem, Dataset and Objective of the
 Datathon.</p>
 </div>
@@ -436,7 +436,7 @@ inclusion and exclusion criteria.</p>
 <pre><code>## The following objects are masked from &#39;package:base&#39;:
 ## 
 ##     intersect, setdiff, setequal, union</code></pre>
-<pre class="r"><code>data &lt;- read.csv(&quot;../../data/mimic_pulseOx_data.csv&quot;)
+<pre class="r"><code>data &lt;- read.csv(&quot;../mimic_pulseOx_data.csv&quot;)
 # print(head(data,1))</code></pre>
 <p><code>Create code below to answer the following questions</code></p>
 <p>How many patients do we have per racial-ethnic group, sex, and other
@@ -454,10 +454,6 @@ print(sex_female_proportions)</code></pre>
 <pre><code>## 
 ##      Asian      Black   Hispanic      Other      White 
 ## 0.02731152 0.06900009 0.03448782 0.19428585 0.67491473</code></pre>
-<pre class="r"><code>print(prop.table(table(data$language)))</code></pre>
-<pre><code>## 
-##         ?   ENGLISH 
-## 0.1136105 0.8863895</code></pre>
 <pre class="r"><code>print(prop.table(table(data$language)))</code></pre>
 <pre><code>## 
 ##         ?   ENGLISH 
