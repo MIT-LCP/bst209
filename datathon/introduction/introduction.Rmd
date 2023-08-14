@@ -298,8 +298,12 @@ library(dplyr)
 ```
 
 ```{r}
-data <- read.csv("../../data/mimic_pulseOx_data.csv")
-# print(head(data,1))
+data <- read.csv("../mimic_pulseOx_data.csv")
+```
+
+
+```{r}
+#print(head(data,5))
 ```
 
 

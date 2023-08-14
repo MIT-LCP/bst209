@@ -1,1 +1,2 @@
-Workshops for the datathon here!
+Workshops for the datathon.
+Please add your CSV here.

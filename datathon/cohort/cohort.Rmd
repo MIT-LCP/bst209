@@ -84,7 +84,7 @@ library(dplyr)
 
 
 ```{r}
-data <- read.csv("../../data/mimic_pulseOx_data.csv")
+data <- read.csv("../mimic_pulseOx_data.csv")
 # print(head(data,1))
 ```
 
